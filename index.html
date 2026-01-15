@@ -113,7 +113,7 @@
         background-color: #333;
     }
 
-    input[type="text"], input[type="email"], input[type="password"], input[type="tel"], textarea {
+    input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"], textarea {
         width: 100%;
         padding: 10px;
         margin: 8px 0;
@@ -624,7 +624,7 @@ XNEON is not just a brand — it represents a future-driven tech vision built fo
             <input type="text" id="shipping-village" placeholder="Village / Area" required>
             <input type="text" id="shipping-city" placeholder="City" required>
             <input type="text" id="shipping-state" placeholder="State" required>
-            <input type="text" id="shipping-country" placeholder="Country" value="India" required>
+            <input type="number" id="shipping-pincode" placeholder="Pincode / Zip Code" required> <input type="text" id="shipping-country" placeholder="Country" value="India" required>
             <fieldset style="margin-top: 20px; border: 1px solid #000; padding: 10px; border-radius: 8px;">
                 <legend style="padding: 0 5px; font-weight: 600;">Payment Method</legend>
                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
@@ -1212,12 +1212,13 @@ import { getDatabase, ref, get, set, onValue, remove, push, child } from "https:
         
         const shippingDetails = {
             name: document.getElementById('shipping-name').value,
-            number: document.getElementById('shipping-number').value,
+            phone: document.getElementById('shipping-number').value, // RENAMED FROM 'number' TO 'phone' FOR ADMIN COMPATIBILITY
             email: document.getElementById('shipping-email').value,
             houseNo: document.getElementById('shipping-house-no').value,
             village: document.getElementById('shipping-village').value,
             city: document.getElementById('shipping-city').value,
             state: document.getElementById('shipping-state').value,
+            pincode: document.getElementById('shipping-pincode').value, // ADDED PINCODE CAPTURE
             country: document.getElementById('shipping-country').value,
         };
 
