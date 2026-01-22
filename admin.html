@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KD Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #000; color: #ccc; }</style>
+</head>
+<body class="p-4">
+
+    <div id="dashboard" class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+            <h1 class="text-3xl text-white font-bold">Admin Panel</h1>
+            <div class="flex gap-4">
+                <button onclick="window.location.href='index.html'" class="text-blue-500">View Site</button>
+            </div>
+        </div>
+
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <button onclick="showTab('orders')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">📦 Orders</button>
+            <button onclick="showTab('products')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">🚁 Products</button>
+            <button onclick="showTab('categories')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">📂 Categories</button>
+            <button onclick="showTab('slider')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">🖼️ Slider</button>
+            <button onclick="showTab('settings')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">⚙️ Settings</button>
+        </div>
+
+        <div id="tab-orders" class="block">
+            <h2 class="text-2xl font-bold text-white mb-4">Manage Orders</h2>
+            <div id="admin-orders-list" class="space-y-4">Loading...</div>
+        </div>
+
+        <div id="tab-products" class="hidden">
+            <div class="mb-8 bg-[#111] p-4 rounded border border-gray-800">
+                <h3 class="text-white font-bold mb-4">Add New Product</h3>
+                
+                <input id="p-name" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Product Name">
+                <input id="p-price" type="number" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Price (₹)">
+                
+                <label class="text-xs text-gray-500 mb-1 block">Category:</label>
+                <select id="p-category" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded text-white">
+                    <option value="General">General</option>
+                </select>
+
+                <textarea id="p-desc" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Description"></textarea>
+                <textarea id="p-specs" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Specifications"></textarea>
+                
+                <div class="mb-2 p-2 border border-gray-800 rounded">
+                    <label class="text-xs text-gray-500 mb-2 block">Images (URLs)</label>
+                    <div id="image-inputs-container" class="space-y-2">
+                        <input class="w-full bg-black border border-gray-700 p-2 rounded p-img-input" placeholder="Main Image URL">
+                    </div>
+                    <button onclick="addImgInput()" class="text-xs text-blue-500 mt-2 font-bold">+ Add Image URL</button>
+                </div>
+
+                <button onclick="saveProduct()" class="w-full bg-green-600 text-white font-bold p-3 rounded mt-2">SAVE PRODUCT</button>
+            </div>
+            
+            <h3 class="text-white font-bold mb-2">Existing Products</h3>
+            <div id="product-list" class="space-y-2">Loading...</div>
+        </div>
+
+        <div id="tab-categories" class="hidden">
+            <div class="mb-8 bg-[#111] p-4 rounded border border-gray-800">
+                <h3 class="text-white font-bold mb-4">Add New Category</h3>
+                <input id="c-name" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Category Name">
+                <input id="c-image" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Category Image URL">
+                <button onclick="saveCategory()" class="w-full bg-purple-600 text-white font-bold p-3 rounded mt-2">SAVE CATEGORY</button>
+            </div>
+            <div id="category-list" class="grid grid-cols-2 gap-4">Loading...</div>
+        </div>
+
+        <div id="tab-slider" class="hidden">
+            <div class="mb-8 bg-[#111] p-4 rounded border border-gray-800">
+                <h3 class="text-white font-bold mb-4">Add New Slide</h3>
+                <input id="s-image" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Image URL">
+                <input id="s-link" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Link">
+                <input id="s-title" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Title">
+                <button onclick="addSlide()" class="w-full bg-blue-600 text-white font-bold p-3 rounded">ADD SLIDE</button>
+            </div>
+            <div id="slider-list" class="grid grid-cols-1 gap-4"></div>
+        </div>
+
+        <div id="tab-settings" class="hidden">
+            <div class="bg-[#111] p-4 rounded border border-gray-800">
+                <h3 class="text-white font-bold mb-4">Website Logo</h3>
+                <p class="text-xs text-gray-500 mb-2">Enter the direct URL of your logo image (PNG/JPG).</p>
+                <input id="logo-url" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="https://example.com/logo.png">
+                <button onclick="updateLogo()" class="bg-white text-black font-bold px-4 py-2 rounded">Update Logo</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="ship-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#111] p-6 rounded-xl border border-gray-800 w-full max-w-sm">
+            <h3 class="text-xl font-bold text-white mb-4">Ship Order</h3>
+            <input id="ship-partner" class="w-full bg-black border border-gray-700 p-2 mb-3 rounded text-white" placeholder="Partner">
+            <input id="ship-track" class="w-full bg-black border border-gray-700 p-2 mb-4 rounded text-white" placeholder="Tracking ID">
+            <button id="confirm-ship-btn" class="w-full bg-blue-600 text-white font-bold py-2 rounded">CONFIRM</button>
+            <button onclick="document.getElementById('ship-modal').classList.add('hidden')" class="w-full mt-2 text-gray-500 py-2">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, doc, updateDoc, addDoc, deleteDoc, setDoc, collection, query, orderBy, onSnapshot, formatINR } from './firebase-config.js';
+
+        // --- TABS LOGIC ---
+        window.showTab = (tabName) => {
+            ['orders', 'products', 'categories', 'slider', 'settings'].forEach(t => {
+                document.getElementById('tab-'+t).style.display = (t === tabName) ? 'block' : 'none';
+            });
+        };
+        
+        loadOrders();
+        loadProducts();
+        loadCategories();
+        loadSlides();
+
+        // --- ORDER LOGIC (Fixed Address Display) ---
+        function loadOrders() {
+            const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snap) => {
+                const list = document.getElementById('admin-orders-list');
+                list.innerHTML = "";
+                if(snap.empty) { list.innerHTML = "<p>No orders.</p>"; return; }
+                
+                snap.forEach(d => {
+                    const o = d.data();
+                    list.innerHTML += `
+                    <div class="bg-[#151515] p-4 rounded border border-gray-800 mb-4">
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold text-white">#${d.id.slice(0,6)}</span>
+                            <span class="text-${o.status === 'Cancelled' ? 'red' : 'green'}-500 font-bold text-sm">${o.status}</span>
+                        </div>
+                        
+                        <div class="bg-black/50 p-3 rounded mb-3 border border-gray-800">
+                            <p class="text-xs text-gray-400 uppercase font-bold mb-1">Shipping Address:</p>
+                            <p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">${o.address || "No address provided"}</p>
+                        </div>
+
+                        <p class="text-sm text-gray-400">Total: ${formatINR(o.total)} | Type: ${o.paymentMethod}</p>
+                        
+                        <div class="flex gap-2 mt-3 flex-wrap">
+                            <button onclick="updateStatus('${d.id}', 'Confirmed')" class="px-3 py-1 bg-green-900 text-green-200 text-xs rounded">Confirm</button>
+                            <button onclick="openShipModal('${d.id}')" class="px-3 py-1 bg-blue-900 text-blue-200 text-xs rounded">Shipped</button>
+                            <button onclick="updateStatus('${d.id}', 'Delivered')" class="px-3 py-1 bg-gray-700 text-white text-xs rounded">Delivered</button>
+                            <button onclick="cancelOrder('${d.id}')" class="px-3 py-1 bg-red-900 text-red-200 text-xs rounded">Cancel</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+
+        window.updateStatus = async (id, status) => { await updateDoc(doc(db, "orders", id), { status: status }); };
+        let currentOrderId = null;
+        window.openShipModal = (id) => { currentOrderId = id; document.getElementById('ship-modal').classList.remove('hidden'); };
+        document.getElementById('confirm-ship-btn').addEventListener('click', async () => {
+            const partner = document.getElementById('ship-partner').value;
+            const track = document.getElementById('ship-track').value;
+            if(currentOrderId && partner && track) {
+                await updateDoc(doc(db, "orders", currentOrderId), { status: "Shipped", deliveryPartner: partner, trackingId: track });
+                document.getElementById('ship-modal').classList.add('hidden');
+            } else { alert("Enter details"); }
+        });
+        window.cancelOrder = async (id) => { if(confirm("Cancel?")) await updateDoc(doc(db, "orders", id), { status: "Cancelled" }); };
+
+        // --- SETTINGS (LOGO) ---
+        window.updateLogo = async () => {
+            const url = document.getElementById('logo-url').value;
+            if(!url) return alert("Enter URL");
+            await setDoc(doc(db, "settings", "general"), { logo: url }, { merge: true });
+            alert("Logo Updated!");
+        };
+
+        // --- CATEGORIES ---
+        window.saveCategory = async () => {
+            const name = document.getElementById('c-name').value;
+            const image = document.getElementById('c-image').value;
+            if(!name || !image) return alert("Fill all fields");
+            await addDoc(collection(db, "categories"), { name, image });
+            alert("Category Added!");
+        };
+
+        function loadCategories() {
+            onSnapshot(collection(db, "categories"), (snap) => {
+                const list = document.getElementById('category-list');
+                const dropdown = document.getElementById('p-category');
+                list.innerHTML = "";
+                dropdown.innerHTML = `<option value="General">General</option>`;
+                snap.forEach(d => {
+                    const c = d.data();
+                    list.innerHTML += `<div class="relative group bg-[#151515] p-2 rounded border border-gray-800"><img src="${c.image}" class="w-full h-24 object-cover rounded mb-2"><h4 class="text-white font-bold text-center">${c.name}</h4><button onclick="deleteCategory('${d.id}')" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded">X</button></div>`;
+                    dropdown.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                });
+            });
+        }
+        window.deleteCategory = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "categories", id)); };
+
+        // --- PRODUCTS ---
+        window.addImgInput = () => { document.getElementById('image-inputs-container').innerHTML += `<input class="w-full bg-black border border-gray-700 p-2 rounded p-img-input mt-2" placeholder="Next Image URL">`; };
+        window.saveProduct = async () => {
+            const inputs = document.querySelectorAll('.p-img-input');
+            const imgArray = [];
+            inputs.forEach(inp => { if(inp.value.trim() !== "") imgArray.push(inp.value.trim()); });
+            if(imgArray.length === 0) return alert("Add image");
+            try {
+                await addDoc(collection(db, "products"), {
+                    name: document.getElementById('p-name').value,
+                    price: Number(document.getElementById('p-price').value),
+                    category: document.getElementById('p-category').value,
+                    desc: document.getElementById('p-desc').value,
+                    specs: document.getElementById('p-specs').value,
+                    images: imgArray, image: imgArray[0],
+                    createdAt: new Date()
+                });
+                alert("Product Saved!"); location.reload();
+            } catch(e) { alert(e.message); }
+        };
+        function loadProducts() {
+            onSnapshot(collection(db, "products"), (snap) => {
+                const list = document.getElementById('product-list');
+                list.innerHTML = "";
+                snap.forEach(d => { list.innerHTML += `<div class="flex justify-between bg-[#151515] p-2 rounded border border-gray-800"><span>${d.data().name} <span class="text-gray-500 text-xs">(${d.data().category})</span></span><button onclick="deleteProduct('${d.id}')" class="text-red-500 text-sm">Delete</button></div>`; });
+            });
+        }
+        window.deleteProduct = async(id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "products", id)); };
+
+        // --- SLIDER ---
+        function loadSlides() {
+            onSnapshot(collection(db, "slider"), (snap) => {
+                const list = document.getElementById('slider-list');
+                list.innerHTML = "";
+                snap.forEach(d => { const s = d.data(); list.innerHTML += `<div class="relative group"><img src="${s.image}" class="w-full h-32 object-cover rounded border border-gray-700"><button onclick="deleteSlide('${d.id}')" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded">Del</button></div>`; });
+            });
+        }
+        window.addSlide = async () => { await addDoc(collection(db, "slider"), { image: document.getElementById('s-image').value, link: document.getElementById('s-link').value, title: document.getElementById('s-title').value }); alert("Added"); };
+        window.deleteSlide = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "slider", id)); };
+    </script>
+</body>
+</html>

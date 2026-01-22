@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | KD Drones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #050505; color: #fff; }</style>
+</head>
+<body>
+    <div id="navbar"></div>
+
+    <div class="max-w-screen-lg mx-auto p-4 pt-8 pb-20">
+        <h1 class="text-3xl font-bold mb-6">My Orders</h1>
+        
+        <div id="orders-list" class="space-y-6">
+            <div class="animate-pulse space-y-4">
+                <div class="bg-[#111] p-6 rounded-xl border border-gray-800 h-40"></div>
+                <div class="bg-[#111] p-6 rounded-xl border border-gray-800 h-40"></div>
+            </div>
+            <p class="text-center text-gray-500 text-sm mt-2">Loading orders securely...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth, loadNavbar, collection, query, where, orderBy, onSnapshot, formatINR } from './firebase-config.js';
+        
+        loadNavbar();
+
+        const list = document.getElementById('orders-list');
+
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                // ✅ PRO CODE: Now that your Index is ENABLED, we can use 'orderBy' safely.
+                // This is much faster and cleaner than sorting on the phone.
+                const q = query(collection(db, "orders"), where("userId", "==", user.uid), orderBy("timestamp", "desc"));
+                
+                onSnapshot(q, (snap) => {
+                    list.innerHTML = ""; // Clear loader
+                    
+                    if(snap.empty) {
+                        list.innerHTML = `
+                        <div class="text-center py-10">
+                            <p class="text-gray-500 text-lg">No orders found.</p>
+                            <a href="index.html" class="inline-block mt-4 text-red-500 hover:text-white border border-red-500 px-4 py-2 rounded">Start Shopping</a>
+                        </div>`;
+                        return;
+                    }
+
+                    snap.forEach(doc => {
+                        const o = doc.data();
+                        const id = doc.id;
+                        
+                        // 🎨 Status Styling
+                        let statusColor = "text-yellow-500";
+                        let statusBg = "bg-yellow-900/20";
+
+                        if(o.status === "Shipped") { statusColor = "text-blue-400"; statusBg = "bg-blue-900/20"; }
+                        if(o.status === "Delivered") { statusColor = "text-green-400"; statusBg = "bg-green-900/20"; }
+                        if(o.status === "Cancelled") { statusColor = "text-red-500"; statusBg = "bg-red-900/20"; }
+
+                        // 📍 Timeline Logic
+                        let timeline = "";
+                        if(o.status !== "Cancelled") {
+                             timeline = `
+                             <div class="flex items-center text-xs md:text-sm mt-5 text-gray-500 select-none overflow-x-auto">
+                                <span class="${['Confirmed', 'Shipped', 'Delivered'].includes(o.status) ? 'text-green-400 font-bold' : ''}">Confirmed</span>
+                                <span class="mx-2 text-gray-700 flex-1 border-b border-gray-800 h-1"></span>
+                                <span class="${['Shipped', 'Delivered'].includes(o.status) ? 'text-blue-400 font-bold' : ''}">Shipped</span>
+                                <span class="mx-2 text-gray-700 flex-1 border-b border-gray-800 h-1"></span>
+                                <span class="${['Delivered'].includes(o.status) ? 'text-green-400 font-bold' : ''}">Delivered</span>
+                             </div>`;
+                        } else {
+                            timeline = `<div class="mt-4 text-red-500 font-bold text-sm bg-red-900/10 p-3 rounded text-center border border-red-900/50">⛔ ORDER CANCELLED</div>`;
+                        }
+
+                        // 🚚 Shipping Info
+                        let shippingInfo = "";
+                        if((o.status === "Shipped" || o.status === "Delivered") && o.status !== "Cancelled") {
+                            shippingInfo = `
+                            <div class="mt-4 bg-[#0a0a0a] p-3 rounded text-sm border border-gray-800 flex flex-col gap-1">
+                                <p class="flex justify-between"><span class="text-gray-400">Courier:</span> <span class="text-white font-medium">${o.deliveryPartner || 'Pending'}</span></p>
+                                <p class="flex justify-between"><span class="text-gray-400">Tracking ID:</span> <span class="text-blue-400 font-mono">${o.trackingId || 'Pending'}</span></p>
+                            </div>`;
+                        }
+
+                        // 🛒 Items
+                        const itemsHtml = o.items ? o.items.map(i => `
+                            <div class="flex items-center gap-4 bg-black/40 p-2 rounded border border-gray-800/50">
+                                <img src="${i.image}" class="w-12 h-12 rounded object-cover border border-gray-800">
+                                <div>
+                                    <p class="text-sm font-medium text-white line-clamp-1">${i.name}</p>
+                                    <p class="text-xs text-gray-500">Qty: ${i.qty || 1}</p>
+                                </div>
+                            </div>
+                        `).join('') : '';
+
+                        list.innerHTML += `
+                        <div class="bg-[#111] p-5 rounded-xl border border-gray-800 shadow-xl transition hover:border-gray-700">
+                            <div class="flex justify-between items-start border-b border-gray-800 pb-3 mb-3">
+                                <div>
+                                    <h3 class="font-bold text-lg text-white">Order #${id.slice(0,6).toUpperCase()}</h3>
+                                    <p class="text-xs text-gray-500">${o.timestamp ? new Date(o.timestamp.seconds * 1000).toDateString() : 'Date Pending'}</p>
+                                </div>
+                                <span class="${statusColor} ${statusBg} font-bold uppercase text-[10px] tracking-wider px-2 py-1 rounded">${o.status}</span>
+                            </div>
+
+                            <div class="space-y-2">${itemsHtml}</div>
+                            ${timeline}
+                            ${shippingInfo}
+
+                            <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center">
+                                <span class="text-sm text-gray-400">Total Amount</span>
+                                <span class="font-bold text-xl text-white">${formatINR(o.total || 0)}</span>
+                            </div>
+                        </div>`;
+                    });
+                });
+            } else {
+                list.innerHTML = `
+                    <div class="text-center mt-10">
+                        <p class="text-white">Please log in to view orders.</p>
+                        <a href="index.html" class="text-blue-500 underline mt-2 block">Go Home</a>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
