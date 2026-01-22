@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | XNEON Technologies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #050505; color: #fff; }
+        .active-thumb { border-color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+
+    <main id="main-content" class="max-w-screen-xl mx-auto p-4 pt-8">
+        <div class="animate-pulse bg-gray-800 w-full h-96 rounded-2xl"></div>
+    </main>
+
+    <script type="module">
+        import { db, auth, loadNavbar, doc, getDoc, setDoc, formatINR } from './firebase-config.js';
+        
+        loadNavbar();
+        
+        const params = new URLSearchParams(window.location.search);
+        const pid = params.get('id');
+        const content = document.getElementById('main-content');
+
+        async function loadProduct() {
+            if(!pid) return;
+            const docSnap = await getDoc(doc(db, "products", pid));
+            
+            if (docSnap.exists()) {
+                const p = docSnap.data();
+                
+                // 🖼️ HANDLE MULTIPLE IMAGES
+                // Fallback: If 'images' array is missing, create one from the single 'image' field
+                const images = (p.images && p.images.length > 0) ? p.images : [p.image];
+                
+                let thumbnailsHTML = "";
+                images.forEach((img, index) => {
+                    thumbnailsHTML += `<img src="${img}" onclick="changeMainImage('${img}', this)" class="w-16 h-16 object-cover rounded border-2 border-transparent cursor-pointer hover:border-white transition ${index===0 ? 'active-thumb' : ''}">`;
+                });
+
+                content.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-[#111] rounded-2xl p-4 flex items-center justify-center border border-gray-800 h-[400px]">
+                            <img id="main-img" src="${images[0]}" class="max-h-full max-w-full object-contain drop-shadow-2xl transition-all duration-300">
+                        </div>
+                        <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                            ${thumbnailsHTML}
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col justify-center">
+                        <h1 class="text-4xl font-bold tracking-tighter mb-2">${p.name}</h1>
+                        <p class="text-3xl text-red-500 font-medium mb-6">${formatINR(p.price)}</p>
+                        
+                        <div class="bg-[#111] p-4 rounded-xl border border-gray-800 mb-6">
+                            <h3 class="text-gray-400 text-sm uppercase tracking-wide mb-2">Description</h3>
+                            <p class="text-gray-200 leading-relaxed">${p.desc}</p>
+                        </div>
+
+                         <div class="bg-[#111] p-4 rounded-xl border border-gray-800 mb-6">
+                            <h3 class="text-gray-400 text-sm uppercase tracking-wide mb-2">Specs</h3>
+                            <p class="text-gray-300 font-mono text-sm whitespace-pre-line">${p.specs || 'Standard Config'}</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <button id="add-to-cart" class="py-4 rounded-xl border border-white font-bold hover:bg-white hover:text-black transition">ADD TO CART</button>
+                            <button id="buy-now" class="py-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition shadow-lg shadow-red-900/20">BUY NOW</button>
+                        </div>
+                    </div>
+                </div>`;
+
+                // Global function for gallery switching
+                window.changeMainImage = (src, el) => {
+                    document.getElementById('main-img').src = src;
+                    document.querySelectorAll('.active-thumb').forEach(t => t.classList.remove('active-thumb'));
+                    el.classList.add('active-thumb');
+                };
+
+                // Add to Cart
+                document.getElementById('add-to-cart').onclick = async () => {
+                    const user = auth.currentUser;
+                    if(user) {
+                        await setDoc(doc(db, "carts", user.uid, "items", pid), {
+                            name: p.name,
+                            price: p.price,
+                            image: images[0], // Use first image for cart thumbnail
+                            qty: 1
+                        });
+                        alert("Added to Cart");
+                        window.location.href = "index.html";
+                    } else {
+                        alert("Please login to shop");
+                        document.getElementById('auth-modal').classList.remove('hidden');
+                    }
+                };
+                
+                // Buy Now (Simplified: Add to cart -> Go to cart)
+                document.getElementById('buy-now').onclick = async () => {
+                     const user = auth.currentUser;
+                     if(user) {
+                        await setDoc(doc(db, "carts", user.uid, "items", pid), {
+                            name: p.name,
+                            price: p.price,
+                            image: images[0],
+                            qty: 1
+                        });
+                        window.location.href = "cart.html";
+                     } else {
+                        alert("Please login to buy");
+                        document.getElementById('auth-modal').classList.remove('hidden');
+                     }
+                };
+            }
+        }
+        loadProduct();
+    </script>
+</body>
+</html>
