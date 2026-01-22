@@ -3,146 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout | KD Drones</title>
+    <title>My Cart | XNEON Technologies</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { background-color: #050505; color: #fff; }</style>
 </head>
 <body>
     <div id="navbar"></div>
 
-    <div class="max-w-screen-lg mx-auto p-4 pt-8 pb-20">
-        <h1 class="text-3xl font-bold mb-6">Checkout</h1>
+    <div class="max-w-screen-xl mx-auto p-4 pt-8 pb-20">
+        <h1 class="text-3xl font-bold mb-6">Shopping Cart</h1>
         
-        <div id="cart-items" class="space-y-4 mb-8"></div>
-        
-        <div class="border-t border-gray-800 pt-4 flex justify-between items-center mb-8">
-            <span class="text-xl font-bold">Total Payable</span>
-            <span id="total-price" class="text-2xl text-red-500 font-bold">₹0</span>
+        <div id="cart-items" class="space-y-4">
+            <div class="animate-pulse bg-gray-800 h-20 rounded-xl"></div>
+            <div class="animate-pulse bg-gray-800 h-20 rounded-xl"></div>
         </div>
 
-        <div id="address-section" class="bg-[#111] p-6 rounded-xl border border-gray-800 hidden">
-            <h2 class="text-xl font-bold mb-4 text-white">Shipping Address</h2>
-            <form id="checkout-form" class="space-y-4">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input required id="addr-name" placeholder="Full Name" class="bg-black border border-gray-700 p-3 rounded text-white outline-none focus:border-red-500">
-                    <input id="addr-email" placeholder="Email (Optional)" class="bg-black border border-gray-700 p-3 rounded text-white outline-none focus:border-red-500">
-                </div>
+        <div class="mt-8 border-t border-gray-800 pt-4">
+            <div class="flex justify-between text-xl font-bold mb-4">
+                <span>Total</span>
+                <span id="cart-total">₹0</span>
+            </div>
+            <button onclick="openCheckout()" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl hover:bg-red-700 transition">CHECKOUT</button>
+        </div>
+    </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                     <input required id="addr-house" placeholder="House No." class="bg-black border border-gray-700 p-3 rounded text-white outline-none focus:border-red-500">
-                     <input required id="addr-street" placeholder="Street / Village" class="bg-black border border-gray-700 p-3 rounded text-white outline-none focus:border-red-500">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                     <input required id="addr-city" placeholder="City" class="bg-black border border-gray-700 p-3 rounded text-white outline-none focus:border-red-500">
-                     <input required id="addr-state" placeholder="State" class="bg-black border border-gray-700 p-3 rounded text-white outline-none focus:border-red-500">
-                </div>
+    <div id="checkout-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#111] p-6 rounded-xl border border-gray-800 w-full max-w-sm relative">
+            <button onclick="document.getElementById('checkout-modal').classList.add('hidden')" class="absolute top-2 right-4 text-gray-500 text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Checkout</h2>
+            
+            <textarea id="address" class="w-full bg-black border border-gray-700 p-3 rounded mb-3 text-white" placeholder="Full Address (Name, Street, City, ZIP)" rows="3"></textarea>
+            
+            <select id="payment-method" class="w-full bg-black border border-gray-700 p-3 rounded mb-4 text-white">
+                <option value="COD">Cash on Delivery</option>
+                <option value="UPI">UPI / Online</option>
+            </select>
 
-                <input required id="addr-country" value="India" readonly class="w-full bg-gray-900 border border-gray-700 p-3 rounded text-gray-400 cursor-not-allowed">
-
-                <h3 class="text-lg font-bold mt-4">Payment Method</h3>
-                <div class="flex gap-4">
-                    <label class="flex items-center gap-2 p-3 border border-red-500 bg-red-900/20 rounded cursor-pointer w-full">
-                        <input type="radio" name="payment" value="cod" checked>
-                        <span class="font-bold text-red-400">Cash on Delivery (COD)</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-3 border border-gray-700 bg-black rounded cursor-pointer w-full opacity-50" onclick="alert('We are currently not accepting online payments. Please select Cash on Delivery (COD).'); return false;">
-                        <input type="radio" name="payment" value="online" disabled>
-                        <span>Online Payment</span>
-                    </label>
-                </div>
-
-                <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl mt-4 hover:bg-gray-200 transition">PLACE ORDER (COD)</button>
-            </form>
+            <button onclick="placeOrder()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700">CONFIRM ORDER</button>
         </div>
     </div>
 
     <script type="module">
-        import { db, auth, loadNavbar, collection, onSnapshot, doc, deleteDoc, addDoc, serverTimestamp, getDocs, formatINR } from './firebase-config.js';
-        
+        import { db, auth, loadNavbar, collection, doc, onSnapshot, deleteDoc, addDoc, formatINR, serverTimestamp } from './firebase-config.js';
+
         loadNavbar();
 
+        const cartDiv = document.getElementById('cart-items');
+        const totalSpan = document.getElementById('cart-total');
         let cartTotal = 0;
+        let cartData = [];
 
         auth.onAuthStateChanged(user => {
             if(user) {
                 onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
-                    const container = document.getElementById('cart-items');
-                    const formSection = document.getElementById('address-section');
+                    cartDiv.innerHTML = "";
                     cartTotal = 0;
-                    container.innerHTML = "";
-                    
+                    cartData = [];
+
                     if(snap.empty) {
-                        container.innerHTML = "<p class='text-gray-500'>Your cart is empty.</p>";
-                        formSection.classList.add('hidden');
-                    } else {
-                        formSection.classList.remove('hidden');
+                        cartDiv.innerHTML = "<p class='text-gray-500'>Your cart is empty.</p>";
+                        totalSpan.innerText = formatINR(0);
+                        return;
                     }
 
                     snap.forEach(d => {
                         const item = d.data();
-                        cartTotal += item.price;
-                        container.innerHTML += `
-                        <div class="flex items-center justify-between bg-[#111] p-4 rounded-lg border border-gray-800">
-                            <div class="flex items-center gap-4">
-                                <img src="${item.image}" class="w-16 h-16 object-cover rounded">
-                                <div>
-                                    <h3 class="font-bold">${item.name}</h3>
-                                    <p class="text-gray-400">${formatINR(item.price)}</p>
-                                </div>
+                        cartData.push(item);
+                        const itemTotal = item.price * item.qty;
+                        cartTotal += itemTotal;
+
+                        cartDiv.innerHTML += `
+                        <div class="flex items-center gap-4 bg-[#111] p-3 rounded-xl border border-gray-800">
+                            <img src="${item.image}" class="w-16 h-16 object-cover rounded">
+                            <div class="flex-1">
+                                <h3 class="font-bold truncate">${item.name}</h3>
+                                <p class="text-sm text-gray-400">${formatINR(item.price)} x ${item.qty}</p>
                             </div>
-                            <button onclick="removeItem('${d.id}')" class="text-red-500 text-sm">Remove</button>
+                            <button onclick="removeItem('${d.id}')" class="text-red-500 font-bold px-2">X</button>
                         </div>`;
                     });
-                    document.getElementById('total-price').innerText = formatINR(cartTotal);
+                    totalSpan.innerText = formatINR(cartTotal);
                 });
+            } else {
+                cartDiv.innerHTML = "<p class='text-gray-500'>Please login to view cart.</p>";
             }
         });
 
         window.removeItem = async (id) => {
-            const user = auth.currentUser;
-            if(user) await deleteDoc(doc(db, "carts", user.uid, "items", id));
+            if(auth.currentUser) await deleteDoc(doc(db, "carts", auth.currentUser.uid, "items", id));
         };
 
-        // 🛒 ORDER PLACEMENT
-        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const user = auth.currentUser;
+        window.openCheckout = () => {
+            if(cartTotal > 0) document.getElementById('checkout-modal').classList.remove('hidden');
+            else alert("Cart is empty");
+        };
+
+        window.placeOrder = async () => {
+            const address = document.getElementById('address').value;
+            const method = document.getElementById('payment-method').value;
             
-            if(!user || user.isAnonymous) {
-                alert("Please Login to place an order.");
-                return;
+            if(!address) return alert("Enter address");
+
+            const user = auth.currentUser;
+            if(user) {
+                await addDoc(collection(db, "orders"), {
+                    userId: user.uid,
+                    items: cartData,
+                    total: cartTotal,
+                    address: address,
+                    paymentMethod: method,
+                    status: "Pending",
+                    timestamp: serverTimestamp()
+                });
+                
+                // Clear Cart
+                const snap = await onSnapshot(collection(db, "carts", user.uid, "items"), (s) => {
+                     s.forEach(d => deleteDoc(d.ref));
+                }); // Note: This is a simplified clear. In production use batch.
+                
+                alert("Order Placed!");
+                window.location.href = "orders.html";
             }
-
-            // Create formatted address string
-            const fullAddress = `
-                ${document.getElementById('addr-name').value},
-                ${document.getElementById('addr-house').value}, ${document.getElementById('addr-street').value},
-                ${document.getElementById('addr-city').value}, ${document.getElementById('addr-state').value},
-                ${document.getElementById('addr-country').value}
-            `;
-
-            const cartSnap = await getDocs(collection(db, "carts", user.uid, "items"));
-            let items = [];
-            cartSnap.forEach(doc => items.push(doc.data()));
-
-            await addDoc(collection(db, "orders"), {
-                userId: user.uid,
-                items: items,
-                total: cartTotal,
-                address: fullAddress, // Simple string for admin view
-                status: "Confirmed",
-                paymentMethod: "COD",
-                timestamp: serverTimestamp()
-            });
-
-            // Clear Cart
-            cartSnap.forEach(async (d) => await deleteDoc(doc(db, "carts", user.uid, "items", d.id)));
-
-            alert("Order Placed Successfully!");
-            window.location.href = "orders.html";
-        });
+        };
     </script>
 </body>
 </html>
