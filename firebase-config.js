@@ -19,8 +19,10 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Debug Log
-console.log("🔥 Firebase Config Loaded: EXTRA LARGE ICONS");
+// 1️⃣ EMAILJS LOAD (For Customer OTP)
+(function() {
+    if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm"); // Public Key
+})();
 
 export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, ref, uploadBytes, getDownloadURL };
 
@@ -28,192 +30,198 @@ export const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 };
 
-// --- GLOBAL TOGGLE FUNCTION ---
 window.toggleSearch = () => {
     const overlay = document.getElementById('search-overlay');
     const input = document.getElementById('search-input');
-    
-    if (overlay.classList.contains('hidden')) {
-        overlay.classList.remove('hidden');
-        setTimeout(() => input.focus(), 100); 
-    } else {
-        overlay.classList.add('hidden');
-        input.value = ""; 
-    }
+    if (overlay.classList.contains('hidden')) { overlay.classList.remove('hidden'); setTimeout(() => input.focus(), 100); } 
+    else { overlay.classList.add('hidden'); input.value = ""; }
 };
 
-// --- NAVBAR LOGIC (BIG ICONS MODE) ---
+// --- NAVBAR LOGIC WITH CUSTOMER OTP ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
-    // 1. Render Structure
     nav.innerHTML = `
         <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[70px] flex items-center">
-            
             <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-2 flex items-center justify-between h-full">
-                
                 <a href="index.html" class="flex-shrink-0 w-[110px] md:w-[150px] h-full flex items-center overflow-hidden">
                     <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON" class="h-8 md:h-12 w-full object-contain object-left" alt="XNEON">
                 </a>
-
                 <div class="flex-1"></div>
-
                 <div class="flex items-center gap-1 md:gap-4 flex-shrink-0">
-                    
-                    <button onclick="window.toggleSearch()" class="text-white p-2 rounded-full focus:outline-none cursor-pointer hover:bg-gray-800">
-                        <svg class="w-[28px] h-[28px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </button>
-
-                    <a href="cart.html" class="relative text-white p-2 rounded hover:bg-gray-800">
-                        <svg class="w-[28px] h-[28px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        <span id="cart-count" class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
-                    </a>
-
-                    <button id="menu-toggle" class="text-white p-2 rounded hover:bg-gray-800">
-                        <svg class="w-[34px] h-[34px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                    </button>
+                    <button onclick="window.toggleSearch()" class="text-white p-2 rounded-full hover:bg-gray-800"><svg class="w-[28px] h-[28px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
+                    <a href="cart.html" class="relative text-white p-2 rounded hover:bg-gray-800"><svg class="w-[28px] h-[28px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span id="cart-count" class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span></a>
+                    <button id="menu-toggle" class="text-white p-2 rounded hover:bg-gray-800"><svg class="w-[34px] h-[34px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg></button>
                 </div>
             </div>
 
-            <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[70px] bg-black z-[100] flex items-center px-4 border-b border-gray-800 shadow-2xl transition-all duration-200">
+            <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[70px] bg-black z-[100] flex items-center px-4 border-b border-gray-800 shadow-2xl">
                 <div class="w-full max-w-screen-xl mx-auto flex items-center gap-3">
-                    <div class="flex-1 relative">
-                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </div>
-                        <input type="text" id="search-input" class="block w-full py-2 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-base" placeholder="Search...">
-                    </div>
+                    <div class="flex-1 relative"><div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div><input type="text" id="search-input" class="block w-full py-2 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-base" placeholder="Search..."></div>
                     <button onclick="window.toggleSearch()" class="text-gray-400 font-bold px-3 py-2 text-sm uppercase tracking-wide cursor-pointer hover:text-white">Cancel</button>
                 </div>
             </div>
 
-            <div id="mobile-menu" class="hidden bg-[#111] border-b border-gray-800 absolute w-full left-0 top-[70px] shadow-xl z-40 h-screen">
-                <ul class="flex flex-col font-medium text-lg" id="menu-list">
-                    </ul>
-            </div>
+            <div id="mobile-menu" class="hidden bg-[#111] border-b border-gray-800 absolute w-full left-0 top-[70px] shadow-xl z-40 h-screen"><ul class="flex flex-col font-medium text-lg" id="menu-list"></ul></div>
         </nav>
-        
         <div class="h-[70px]"></div> 
 
         <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-4">
-            <div class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-sm relative">
-                <button onclick="document.getElementById('auth-modal').classList.add('hidden')" class="absolute top-2 right-4 text-gray-500 text-2xl">&times;</button>
-                <h2 class="text-xl font-bold mb-4 text-white">Login / Signup</h2>
-                <input type="email" id="auth-email" placeholder="Email" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-3">
-                <input type="password" id="auth-pass" placeholder="Password" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4">
-                <div class="flex gap-2">
-                    <button id="btn-login" class="flex-1 bg-white text-black font-bold py-2 rounded">LOGIN</button>
-                    <button id="btn-signup" class="flex-1 border border-white text-white font-bold py-2 rounded">SIGNUP</button>
+            <div class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-sm relative shadow-2xl">
+                <button onclick="document.getElementById('auth-modal').classList.add('hidden'); resetAuthUI();" class="absolute top-2 right-4 text-gray-500 text-2xl hover:text-white">&times;</button>
+                
+                <h2 class="text-xl font-bold mb-4 text-white text-center" id="auth-title">Login / Signup</h2>
+                
+                <div id="auth-step-1">
+                    <input type="email" id="auth-email" placeholder="Email Address" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-3 focus:border-red-600 outline-none">
+                    <input type="password" id="auth-pass" placeholder="Password" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 focus:border-red-600 outline-none">
+                    <div class="flex gap-2 flex-col">
+                        <button id="btn-login" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200">LOGIN</button>
+                        <div class="flex items-center justify-between text-gray-500 text-xs my-1"><span>OR</span></div>
+                        <button id="btn-init-signup" class="w-full border border-gray-600 text-white font-bold py-3 rounded hover:border-white transition">VERIFY & SIGNUP</button>
+                    </div>
                 </div>
+
+                <div id="auth-step-2" class="hidden text-center">
+                    <p class="text-gray-400 text-sm mb-4">OTP sent to <span id="otp-sent-email" class="text-white font-bold"></span></p>
+                    <input type="number" id="auth-otp-input" placeholder="Enter 6-digit OTP" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 text-center text-xl tracking-widest font-bold focus:border-green-500 outline-none">
+                    <button id="btn-verify-otp" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700 shadow-lg shadow-green-900/50">CONFIRM OTP & CREATE ACCOUNT</button>
+                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 underline">Cancel / Change Email</button>
+                </div>
+                
+                <p id="auth-msg" class="text-center text-xs mt-3 text-yellow-500 animate-pulse hidden">Processing...</p>
             </div>
         </div>
     `;
 
-    // Fetch Logo
-    getDoc(doc(db, "settings", "general")).then(snap => {
-        if(snap.exists() && snap.data().logo) {
-            document.getElementById('nav-logo').src = snap.data().logo;
-        }
-    });
+    getDoc(doc(db, "settings", "general")).then(snap => { if(snap.exists() && snap.data().logo) document.getElementById('nav-logo').src = snap.data().logo; });
 
-    // --- MENU & AUTH LOGIC ---
+    // --- AUTH LOGIC (With Customer OTP) ---
+    let generatedCustomerOTP = null;
+    let tempEmail = "";
+    let tempPass = "";
+
+    window.resetAuthUI = () => {
+        document.getElementById('auth-step-1').classList.remove('hidden');
+        document.getElementById('auth-step-2').classList.add('hidden');
+        document.getElementById('auth-title').innerText = "Login / Signup";
+        document.getElementById('auth-otp-input').value = "";
+    };
+
+    setTimeout(() => {
+        const btnLogin = document.getElementById('btn-login');
+        const btnInitSignup = document.getElementById('btn-init-signup');
+        const btnVerifyOtp = document.getElementById('btn-verify-otp');
+        const authMsg = document.getElementById('auth-msg');
+
+        // 1. LOGIN (Direct Firebase Login)
+        if(btnLogin) btnLogin.addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            authMsg.innerText = "Logging in..."; authMsg.classList.remove('hidden');
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.location.reload();
+            } catch(e) { authMsg.innerText = "Error: " + e.message; authMsg.classList.add('text-red-500'); }
+        });
+
+        // 2. INITIATE SIGNUP (Send OTP)
+        if(btnInitSignup) btnInitSignup.addEventListener('click', () => {
+            tempEmail = document.getElementById('auth-email').value.trim();
+            tempPass = document.getElementById('auth-pass').value;
+
+            if(!tempEmail || tempPass.length < 6) {
+                alert("Please enter a valid email and a password (min 6 chars).");
+                return;
+            }
+
+            // Generate OTP
+            generatedCustomerOTP = Math.floor(100000 + Math.random() * 900000);
+            
+            // UI Updates
+            authMsg.innerText = "Sending Verification OTP...";
+            authMsg.classList.remove('hidden');
+            btnInitSignup.disabled = true;
+
+            // 🟢 UPDATED: USING NEW TEMPLATE ID FOR CUSTOMERS
+            const templateParams = {
+                user_email: tempEmail,   // Customer's Email
+                otp_code: generatedCustomerOTP
+            };
+
+            emailjs.send("service_3vbmeu4", "template_i1g09mi", templateParams) 
+                .then(() => {
+                    authMsg.classList.add('hidden');
+                    document.getElementById('auth-step-1').classList.add('hidden');
+                    document.getElementById('auth-step-2').classList.remove('hidden');
+                    document.getElementById('otp-sent-email').innerText = tempEmail;
+                    document.getElementById('auth-title').innerText = "Verify Email";
+                    btnInitSignup.disabled = false;
+                }, (err) => {
+                    alert("Failed to send OTP. Check console.");
+                    console.error(err);
+                    btnInitSignup.disabled = false;
+                    authMsg.classList.add('hidden');
+                });
+        });
+
+        // 3. VERIFY OTP & CREATE ACCOUNT
+        if(btnVerifyOtp) btnVerifyOtp.addEventListener('click', async () => {
+            const enteredOTP = document.getElementById('auth-otp-input').value;
+            
+            if(parseInt(enteredOTP) === generatedCustomerOTP) {
+                authMsg.innerText = "Creating Account..."; 
+                authMsg.classList.remove('hidden');
+                
+                try {
+                    // Create User in Firebase Auth
+                    const userCredential = await createUserWithEmailAndPassword(auth, tempEmail, tempPass);
+                    const user = userCredential.user;
+
+                    // Create User Doc in Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        email: tempEmail,
+                        createdAt: serverTimestamp(),
+                        role: "customer"
+                    });
+
+                    alert("✅ Account Verified & Created!");
+                    window.location.reload();
+
+                } catch(error) {
+                    alert("Error Creating Account: " + error.message);
+                    authMsg.classList.add('hidden');
+                }
+            } else {
+                alert("❌ Incorrect OTP! Please try again.");
+            }
+        });
+
+    }, 1000);
+
+    // --- MENU HANDLING ---
     const menuList = document.getElementById('menu-list');
-    const commonLinks = `
-        <li>
-            <a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                <span>Home</span>
-            </a>
-        </li>
-        <li>
-            <a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                <span>Categories</span>
-            </a>
-        </li>
-    `;
+    const commonLinks = `<li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Home</span></a></li><li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Categories</span></a></li>`;
 
     onAuthStateChanged(auth, (user) => {
-        const isUser = user && !user.isAnonymous;
-        
-        if(isUser) {
-            menuList.innerHTML = `
-                ${commonLinks}
-                <li>
-                    <a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                        <span>My Orders</span>
-                    </a>
-                </li>
-                <li>
-                    <button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 flex items-center gap-4 border-b border-gray-800">
-                        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        <span>Logout</span>
-                    </button>
-                </li>
-            `;
-            setTimeout(() => {
-                const logoutBtn = document.getElementById('logout-btn');
-                if(logoutBtn) logoutBtn.addEventListener('click', () => {
-                    signOut(auth).then(() => window.location.reload());
-                });
-            }, 500);
+        if(user && !user.isAnonymous) {
+            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>My Orders</span></a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 flex items-center gap-4 border-b border-gray-800"><span>Logout</span></button></li>`;
+            setTimeout(() => { document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => window.location.reload())); }, 500);
         } else {
-            menuList.innerHTML = `
-                ${commonLinks}
-                <li>
-                    <button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 flex items-center gap-4 border-b border-gray-800">
-                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-                        <span>Login / Signup</span>
-                    </button>
-                </li>
-            `;
-            
-             setTimeout(() => {
-                const btnLogin = document.getElementById('btn-login');
-                const btnSignup = document.getElementById('btn-signup');
-                
-                if(btnLogin) btnLogin.addEventListener('click', async () => {
-                    try {
-                        await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value);
-                        window.location.reload();
-                    } catch(e) { alert(e.message); }
-                });
-
-                if(btnSignup) btnSignup.addEventListener('click', async () => {
-                    try {
-                        await createUserWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-pass').value);
-                        window.location.reload();
-                    } catch(e) { alert(e.message); }
-                });
-             }, 500);
+            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 flex items-center gap-4 border-b border-gray-800"><span>Login / Signup</span></button></li>`;
         }
     });
 
     const menuToggle = document.getElementById('menu-toggle');
-    if(menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
-    }
-
+    if(menuToggle) menuToggle.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
     updateCartCount();
 }
 
 function updateCartCount() {
     onAuthStateChanged(auth, (user) => {
-        if (user) {
-            onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
-                const count = document.getElementById('cart-count');
-                if (count) {
-                    if (snap.size > 0) {
-                        count.innerText = snap.size;
-                        count.classList.remove('hidden');
-                    } else {
-                        count.classList.add('hidden');
-                    }
-                }
-            });
-        }
+        if (user) onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
+            const count = document.getElementById('cart-count');
+            if (count) { if (snap.size > 0) { count.innerText = snap.size; count.classList.remove('hidden'); } else { count.classList.add('hidden'); } }
+        });
     });
 }
