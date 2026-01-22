@@ -29,19 +29,19 @@ export const formatINR = (amount) => {
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
-    // 1. Render Structure (Fixed Fit)
+    // 1. Render Structure (Strict Layout)
     nav.innerHTML = `
         <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[70px] flex items-center">
             
             <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-3 flex items-center justify-between">
                 
-                <a href="index.html" class="flex-shrink-0">
-                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON+Technologies" class="h-10 md:h-12 w-auto object-contain transition-all" alt="XNEON Technologies">
+                <a href="index.html" class="flex-shrink-0 block overflow-hidden">
+                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON" class="h-10 md:h-12 w-auto max-w-[140px] object-contain" alt="XNEON">
                 </a>
 
                 <div class="flex-1"></div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-shrink-0">
                     
                     <button id="open-search-btn" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800 focus:outline-none cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -99,7 +99,7 @@ export function loadNavbar() {
         }
     });
 
-    // --- ⚡ EVENT BINDING (Search Logic) ---
+    // --- ⚡ EVENT BINDING (Search Logic - Bulletproof) ---
     setTimeout(() => {
         const openBtn = document.getElementById('open-search-btn');
         const closeBtn = document.getElementById('close-search-btn');
@@ -108,7 +108,6 @@ export function loadNavbar() {
 
         if(openBtn) {
             openBtn.onclick = function() {
-                // Just Show Overlay - DO NOT FOCUS INPUT (No Keyboard)
                 overlay.classList.remove('hidden');
             };
         }
