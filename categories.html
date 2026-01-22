@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categories | KD Drones</title>
+    <title>Categories | XNEON Technologies</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { background-color: #050505; color: #fff; }</style>
 </head>
@@ -35,7 +35,6 @@
 
             snap.forEach(doc => {
                 const c = doc.data();
-                // When clicked, open category-products.html with ?cat=CategoryName
                 grid.innerHTML += `
                 <div class="relative group cursor-pointer overflow-hidden rounded-xl h-48 border border-gray-800 hover:border-red-600 transition" 
                      onclick="window.location.href='category-products.html?cat=${encodeURIComponent(c.name)}'">
