@@ -25,27 +25,11 @@ export const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 };
 
-// --- GLOBAL TOGGLE FUNCTION (Guaranteed to work) ---
-window.toggleSearch = () => {
-    const overlay = document.getElementById('search-overlay');
-    const input = document.getElementById('search-input');
-    
-    if (overlay.classList.contains('hidden')) {
-        // OPEN
-        overlay.classList.remove('hidden');
-        setTimeout(() => input.focus(), 100); // Focus input to open keyboard
-    } else {
-        // CLOSE
-        overlay.classList.add('hidden');
-        input.value = ""; // Optional: Clear search on close
-    }
-};
-
 // --- NAVBAR LOGIC ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
-    // 1. Render Structure (With onclick="window.toggleSearch()" built-in)
+    // 1. Render Structure (NO inline onclicks)
     nav.innerHTML = `
         <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[80px] flex items-center">
             
@@ -57,7 +41,7 @@ export function loadNavbar() {
 
                 <div class="flex items-center gap-4">
                     
-                    <button onclick="window.toggleSearch()" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800 focus:outline-none">
+                    <button id="open-search-btn" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800 focus:outline-none cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </button>
 
@@ -80,7 +64,7 @@ export function loadNavbar() {
                         </div>
                         <input type="text" id="search-input" class="block w-full py-3 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-lg" placeholder="Search products...">
                     </div>
-                    <button onclick="window.toggleSearch()" class="text-gray-400 hover:text-white font-bold px-3 py-2 transition uppercase text-sm tracking-wide">Cancel</button>
+                    <button id="close-search-btn" class="text-gray-400 hover:text-white font-bold px-3 py-2 transition uppercase text-sm tracking-wide cursor-pointer">Cancel</button>
                 </div>
             </div>
 
@@ -112,6 +96,33 @@ export function loadNavbar() {
             document.getElementById('nav-logo').src = snap.data().logo;
         }
     });
+
+    // --- ⚡ DIRECT EVENT BINDING (Fixes "Not Working" Issue) ---
+    // We attach the click logic manually AFTER the HTML is rendered.
+    setTimeout(() => {
+        const openBtn = document.getElementById('open-search-btn');
+        const closeBtn = document.getElementById('close-search-btn');
+        const overlay = document.getElementById('search-overlay');
+        const input = document.getElementById('search-input');
+
+        console.log("Initializing Search Logic...", { openBtn, overlay }); // Debug log
+
+        if(openBtn) {
+            openBtn.onclick = function() {
+                console.log("Search Button Clicked");
+                overlay.classList.remove('hidden');
+                setTimeout(() => input.focus(), 100);
+            };
+        }
+
+        if(closeBtn) {
+            closeBtn.onclick = function() {
+                console.log("Close Button Clicked");
+                overlay.classList.add('hidden');
+                input.value = ""; 
+            };
+        }
+    }, 500); // 500ms delay to ensure elements are ready
 
     // --- MENU & AUTH LOGIC ---
     const menuList = document.getElementById('menu-list');
