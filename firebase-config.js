@@ -29,54 +29,54 @@ export const formatINR = (amount) => {
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
-    // 1. Render Structure
+    // 1. Render Structure (Fixed Fit)
     nav.innerHTML = `
-        <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[80px] flex items-center">
+        <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[70px] flex items-center">
             
-            <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-4 flex items-center justify-between gap-3">
+            <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-3 flex items-center justify-between">
                 
                 <a href="index.html" class="flex-shrink-0">
-                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON+Technologies" class="h-12 md:h-14 w-auto object-contain transition-all" alt="XNEON Technologies">
+                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON+Technologies" class="h-10 md:h-12 w-auto object-contain transition-all" alt="XNEON Technologies">
                 </a>
 
                 <div class="flex-1"></div>
 
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
                     
                     <button id="open-search-btn" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800 focus:outline-none cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </button>
 
                     <a href="cart.html" class="relative text-white hover:text-red-500 transition p-2 rounded hover:bg-gray-800">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         <span id="cart-count" class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </a>
 
                     <button id="menu-toggle" class="text-white focus:outline-none p-2 rounded hover:bg-gray-800">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                     </button>
                 </div>
             </div>
 
-            <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[80px] bg-black z-[100] flex items-center px-4 border-b border-gray-800 shadow-2xl transition-all duration-200">
+            <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[70px] bg-black z-[100] flex items-center px-4 border-b border-gray-800 shadow-2xl transition-all duration-200">
                 <div class="w-full max-w-screen-xl mx-auto flex items-center gap-3">
                     <div class="flex-1 relative">
                          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        <input type="text" id="search-input" class="block w-full py-3 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-lg" placeholder="Search products...">
+                        <input type="text" id="search-input" class="block w-full py-2 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-base" placeholder="Search products...">
                     </div>
                     <button id="close-search-btn" class="text-gray-400 hover:text-white font-bold px-3 py-2 transition uppercase text-sm tracking-wide cursor-pointer">Cancel</button>
                 </div>
             </div>
 
-            <div id="mobile-menu" class="hidden bg-[#111] border-b border-gray-800 absolute w-full left-0 top-[80px] shadow-xl z-40 h-screen">
+            <div id="mobile-menu" class="hidden bg-[#111] border-b border-gray-800 absolute w-full left-0 top-[70px] shadow-xl z-40 h-screen">
                 <ul class="flex flex-col font-medium text-lg" id="menu-list">
                     </ul>
             </div>
         </nav>
         
-        <div class="h-[80px]"></div> 
+        <div class="h-[70px]"></div> 
 
         <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-4">
             <div class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-sm relative">
