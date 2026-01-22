@@ -26,7 +26,7 @@
             <p class="text-gray-500 text-sm mb-6">Enter your registered email to receive OTP.</p>
 
             <div id="step-email">
-                <input type="email" id="admin-email-input" class="w-full bg-black border border-gray-700 text-white p-3 rounded-lg mb-4 text-center focus:border-red-600 outline-none transition" placeholder="admin@example.com">
+                <input type="email" id="admin-email-input" class="w-full bg-black border border-gray-700 text-white p-3 rounded-lg mb-4 text-center focus:border-red-600 outline-none transition" placeholder="Enter Admin Email">
                 <button onclick="sendOTP()" id="send-btn" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition">SEND OTP</button>
             </div>
 
@@ -105,19 +105,29 @@
     <script type="module">
         import { db, doc, updateDoc, addDoc, deleteDoc, setDoc, collection, query, orderBy, onSnapshot, formatINR } from './firebase-config.js';
 
-        // --- 🔐 SECURITY CONFIGURATION (CHANGE THIS EMAIL) ---
-        const AUTHORIZED_EMAIL = "shivanshtripathi@example.com"; // ⚠️ YAHAN APNA EMAIL LIKHO
-        // ----------------------------------------------------
+        // =========================================================
+        // 🔴 SECURITY SETTING - IMPORTANT: CHANGE THIS EMAIL!
+        // =========================================================
+        // Is email ko hata ke apna ASLI email likho.
+        // Example: const AUTHORIZED_EMAIL = "tripathivlogs@gmail.com";
+        
+        const AUTHORIZED_EMAIL = "tripathivlogs39@gmail.com"; 
+        
+        // =========================================================
 
         let generatedOTP = null;
 
         // Make functions global for HTML onclicks
         window.sendOTP = function() {
-            const emailInput = document.getElementById('admin-email-input').value;
+            let emailInput = document.getElementById('admin-email-input').value;
             const status = document.getElementById('status-msg');
             const btn = document.getElementById('send-btn');
 
-            // Generate 6 Digit OTP for both valid and invalid attempts (to fake it for hackers)
+            // Clean input (remove spaces, lowercase)
+            emailInput = emailInput.trim().toLowerCase();
+            const validEmail = AUTHORIZED_EMAIL.trim().toLowerCase();
+
+            // Generate 6 Digit OTP
             generatedOTP = Math.floor(100000 + Math.random() * 900000);
             
             // UI Update
@@ -126,26 +136,24 @@
             btn.disabled = true;
             btn.innerText = "Sending...";
 
-            // Send via EmailJS (SEND TO ADMIN, but include Intruder's Email in body)
+            // Send via EmailJS (Always send to ADMIN email, even if intruder)
             const templateParams = {
-                to_email: AUTHORIZED_EMAIL, // Always send to Admin
-                otp_code: generatedOTP,     // OTP Code
-                intruder_email: emailInput  // The email address trying to login
+                to_email: validEmail,       // Send to REAL Admin
+                otp_code: generatedOTP,     // The Code
+                intruder_email: emailInput  // Who tried to login
             };
 
-            // Logic: Agar sahi email hai toh normal OTP bhejo.
-            // Agar galat email hai, tab bhi Admin ko alert bhejo ki "Is email ne try kiya"
-            
             emailjs.send("service_3vbmeu4", "template_0lecpgb", templateParams)
                 .then(function(response) {
-                    if(emailInput.trim() === AUTHORIZED_EMAIL) {
+                    if(emailInput === validEmail) {
+                        // Email Matches -> Show OTP Input
                         status.innerText = "✅ OTP Sent! Check your inbox.";
                         status.classList.remove('text-yellow-500');
                         status.classList.add('text-green-500');
                         document.getElementById('step-email').classList.add('hidden');
                         document.getElementById('step-otp').classList.remove('hidden');
                     } else {
-                        // Fake success for intruder, but actually alerted admin
+                        // Email Mismatch -> Fake Alert
                         alert("❌ Access Denied: This email is not authorized. Admin has been notified of your IP/Email.");
                         location.reload();
                     }
@@ -159,60 +167,27 @@
 
         window.verifyOTP = function() {
             const enteredOTP = document.getElementById('otp-input').value;
-            
             if(parseInt(enteredOTP) === generatedOTP) {
-                // Success
                 document.getElementById('auth-layer').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-                
-                // Clear OTP from memory for security
                 generatedOTP = null; 
             } else {
                 alert("❌ Wrong OTP! Try again.");
             }
         };
 
-        window.logout = function() {
-            location.reload(); // Reloading activates the lock again
-        };
-
+        window.logout = function() { location.reload(); };
 
         // --- EXISTING ADMIN LOGIC ---
-        window.showTab = (tabName) => {
-            ['orders', 'products', 'categories', 'slider', 'settings'].forEach(t => {
-                document.getElementById('tab-'+t).style.display = (t === tabName) ? 'block' : 'none';
-            });
-        };
+        window.showTab = (tabName) => { ['orders', 'products', 'categories', 'slider', 'settings'].forEach(t => { document.getElementById('tab-'+t).style.display = (t === tabName) ? 'block' : 'none'; }); };
+        loadOrders(); loadProducts(); loadCategories(); loadSlides();
         
-        loadOrders();
-        loadProducts();
-        loadCategories();
-        loadSlides();
-
-        // Orders
-        function loadOrders() {
-            const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
-            onSnapshot(q, (snap) => {
-                const list = document.getElementById('admin-orders-list');
-                list.innerHTML = "";
-                if(snap.empty) { list.innerHTML = "<p>No orders.</p>"; return; }
-                snap.forEach(d => {
-                    const o = d.data();
-                    list.innerHTML += `<div class="bg-[#151515] p-4 rounded border border-gray-800 mb-4"><div class="flex justify-between mb-2"><span class="font-bold text-white">#${d.id.slice(0,6)}</span><span class="text-${o.status === 'Cancelled' ? 'red' : 'green'}-500 font-bold text-sm">${o.status}</span></div><div class="bg-black/50 p-3 rounded mb-3 border border-gray-800"><p class="text-xs text-gray-400 uppercase font-bold mb-1">Shipping Address:</p><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">${o.address || "No address provided"}</p></div><p class="text-sm text-gray-400">Total: ${formatINR(o.total)} | Type: ${o.paymentMethod}</p><div class="flex gap-2 mt-3 flex-wrap"><button onclick="updateStatus('${d.id}', 'Confirmed')" class="px-3 py-1 bg-green-900 text-green-200 text-xs rounded">Confirm</button><button onclick="openShipModal('${d.id}')" class="px-3 py-1 bg-blue-900 text-blue-200 text-xs rounded">Shipped</button><button onclick="updateStatus('${d.id}', 'Delivered')" class="px-3 py-1 bg-gray-700 text-white text-xs rounded">Delivered</button><button onclick="cancelOrder('${d.id}')" class="px-3 py-1 bg-red-900 text-red-200 text-xs rounded">Cancel</button></div></div>`;
-                });
-            });
-        }
+        function loadOrders() { const q = query(collection(db, "orders"), orderBy("timestamp", "desc")); onSnapshot(q, (snap) => { const list = document.getElementById('admin-orders-list'); list.innerHTML = ""; if(snap.empty) { list.innerHTML = "<p>No orders.</p>"; return; } snap.forEach(d => { const o = d.data(); list.innerHTML += `<div class="bg-[#151515] p-4 rounded border border-gray-800 mb-4"><div class="flex justify-between mb-2"><span class="font-bold text-white">#${d.id.slice(0,6)}</span><span class="text-${o.status === 'Cancelled' ? 'red' : 'green'}-500 font-bold text-sm">${o.status}</span></div><div class="bg-black/50 p-3 rounded mb-3 border border-gray-800"><p class="text-xs text-gray-400 uppercase font-bold mb-1">Shipping Address:</p><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">${o.address || "No address provided"}</p></div><p class="text-sm text-gray-400">Total: ${formatINR(o.total)} | Type: ${o.paymentMethod}</p><div class="flex gap-2 mt-3 flex-wrap"><button onclick="updateStatus('${d.id}', 'Confirmed')" class="px-3 py-1 bg-green-900 text-green-200 text-xs rounded">Confirm</button><button onclick="openShipModal('${d.id}')" class="px-3 py-1 bg-blue-900 text-blue-200 text-xs rounded">Shipped</button><button onclick="updateStatus('${d.id}', 'Delivered')" class="px-3 py-1 bg-gray-700 text-white text-xs rounded">Delivered</button><button onclick="cancelOrder('${d.id}')" class="px-3 py-1 bg-red-900 text-red-200 text-xs rounded">Cancel</button></div></div>`; }); }); }
         window.updateStatus = async (id, status) => { await updateDoc(doc(db, "orders", id), { status: status }); };
         let currentOrderId = null;
         window.openShipModal = (id) => { currentOrderId = id; document.getElementById('ship-modal').classList.remove('hidden'); };
-        document.getElementById('confirm-ship-btn').addEventListener('click', async () => {
-            const partner = document.getElementById('ship-partner').value;
-            const track = document.getElementById('ship-track').value;
-            if(currentOrderId && partner && track) { await updateDoc(doc(db, "orders", currentOrderId), { status: "Shipped", deliveryPartner: partner, trackingId: track }); document.getElementById('ship-modal').classList.add('hidden'); }
-        });
+        document.getElementById('confirm-ship-btn').addEventListener('click', async () => { const partner = document.getElementById('ship-partner').value; const track = document.getElementById('ship-track').value; if(currentOrderId && partner && track) { await updateDoc(doc(db, "orders", currentOrderId), { status: "Shipped", deliveryPartner: partner, trackingId: track }); document.getElementById('ship-modal').classList.add('hidden'); } });
         window.cancelOrder = async (id) => { if(confirm("Cancel?")) await updateDoc(doc(db, "orders", id), { status: "Cancelled" }); };
-
-        // Other Functions
         window.updateLogo = async () => { const url = document.getElementById('logo-url').value; if(url) await setDoc(doc(db, "settings", "general"), { logo: url }, { merge: true }); alert("Updated!"); };
         window.saveCategory = async () => { const name = document.getElementById('c-name').value; const image = document.getElementById('c-image').value; if(name && image) await addDoc(collection(db, "categories"), { name, image }); alert("Added!"); };
         function loadCategories() { onSnapshot(collection(db, "categories"), (snap) => { const l = document.getElementById('category-list'); const d = document.getElementById('p-category'); l.innerHTML=""; d.innerHTML=`<option value="General">General</option>`; snap.forEach(doc => { const c=doc.data(); l.innerHTML+=`<div class="relative group bg-[#151515] p-2 rounded border border-gray-800"><img src="${c.image}" class="w-full h-24 object-cover rounded mb-2"><h4 class="text-white font-bold text-center">${c.name}</h4><button onclick="deleteCategory('${doc.id}')" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded">X</button></div>`; d.innerHTML+=`<option value="${c.name}">${c.name}</option>`; }); }); }
