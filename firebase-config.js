@@ -29,7 +29,7 @@ export const formatINR = (amount) => {
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
-    // 1. Render Structure (NO inline onclicks)
+    // 1. Render Structure
     nav.innerHTML = `
         <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[80px] flex items-center">
             
@@ -38,6 +38,8 @@ export function loadNavbar() {
                 <a href="index.html" class="flex-shrink-0">
                     <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON+Technologies" class="h-12 md:h-14 w-auto object-contain transition-all" alt="XNEON Technologies">
                 </a>
+
+                <div class="flex-1"></div>
 
                 <div class="flex items-center gap-4">
                     
@@ -97,32 +99,27 @@ export function loadNavbar() {
         }
     });
 
-    // --- ⚡ DIRECT EVENT BINDING (Fixes "Not Working" Issue) ---
-    // We attach the click logic manually AFTER the HTML is rendered.
+    // --- ⚡ EVENT BINDING (Search Logic) ---
     setTimeout(() => {
         const openBtn = document.getElementById('open-search-btn');
         const closeBtn = document.getElementById('close-search-btn');
         const overlay = document.getElementById('search-overlay');
         const input = document.getElementById('search-input');
 
-        console.log("Initializing Search Logic...", { openBtn, overlay }); // Debug log
-
         if(openBtn) {
             openBtn.onclick = function() {
-                console.log("Search Button Clicked");
+                // Just Show Overlay - DO NOT FOCUS INPUT (No Keyboard)
                 overlay.classList.remove('hidden');
-                setTimeout(() => input.focus(), 100);
             };
         }
 
         if(closeBtn) {
             closeBtn.onclick = function() {
-                console.log("Close Button Clicked");
                 overlay.classList.add('hidden');
                 input.value = ""; 
             };
         }
-    }, 500); // 500ms delay to ensure elements are ready
+    }, 500);
 
     // --- MENU & AUTH LOGIC ---
     const menuList = document.getElementById('menu-list');
