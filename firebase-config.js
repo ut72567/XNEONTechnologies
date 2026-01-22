@@ -3,7 +3,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// 🔴 NEW CONFIGURATION (xneon-c12a2)
+// 🔴 NEW CONFIGURATION (xneon-c12a2) - This fixes the "Suspended" error
 const firebaseConfig = {
   apiKey: "AIzaSyCCc2pN-sdmwoz1aXxqX4rnN1-oUU_5s7w",
   authDomain: "xneon-c12a2.firebaseapp.com",
@@ -25,7 +25,7 @@ export const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 };
 
-// --- NAVBAR LOGIC (Professional Icons | Clean Layout) ---
+// --- NAVBAR LOGIC (Professional Design | XNEON Technologies) ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
@@ -90,7 +90,7 @@ export function loadNavbar() {
 
     const menuList = document.getElementById('menu-list');
     
-    // --- PROFESSIONAL MENU LINKS (SVG Icons) ---
+    // --- MENU LINKS (Professional Icons) ---
     const commonLinks = `
         <li>
             <a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">
