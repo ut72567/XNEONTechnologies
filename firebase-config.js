@@ -25,7 +25,7 @@ export const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 };
 
-// --- NAVBAR LOGIC (Search Button Popup | Professional Design) ---
+// --- NAVBAR LOGIC (Fixed Search Popup) ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
@@ -41,7 +41,7 @@ export function loadNavbar() {
 
                 <div class="flex items-center gap-4">
                     
-                    <button id="open-search-btn" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800">
+                    <button id="open-search-btn" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800 focus:outline-none">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </button>
 
@@ -56,7 +56,7 @@ export function loadNavbar() {
                 </div>
             </div>
 
-            <div id="search-overlay" class="hidden absolute inset-0 bg-black w-full h-full flex items-center px-4 z-50">
+            <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[80px] bg-black z-[60] flex items-center px-4 border-b border-gray-800 shadow-2xl">
                 <div class="w-full max-w-screen-xl mx-auto flex items-center gap-3">
                     <div class="flex-1 relative">
                          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -64,7 +64,7 @@ export function loadNavbar() {
                         </div>
                         <input type="text" id="search-input" class="block w-full py-3 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-lg" placeholder="Search products...">
                     </div>
-                    <button id="close-search-btn" class="text-gray-400 hover:text-white font-bold px-3 transition">CANCEL</button>
+                    <button id="close-search-btn" class="text-gray-400 hover:text-white font-bold px-3 py-2 transition uppercase text-sm tracking-wide">Cancel</button>
                 </div>
             </div>
 
@@ -97,27 +97,33 @@ export function loadNavbar() {
         }
     });
 
-    // --- SEARCH TOGGLE LOGIC ---
-    const openBtn = document.getElementById('open-search-btn');
-    const closeBtn = document.getElementById('close-search-btn');
-    const overlay = document.getElementById('search-overlay');
-    const mainNav = document.getElementById('nav-main');
-    const input = document.getElementById('search-input');
+    // --- SEARCH TOGGLE LOGIC (Robust) ---
+    // We use a short delay to ensure DOM is ready
+    setTimeout(() => {
+        const openBtn = document.getElementById('open-search-btn');
+        const closeBtn = document.getElementById('close-search-btn');
+        const overlay = document.getElementById('search-overlay');
+        const input = document.getElementById('search-input');
 
-    if(openBtn) {
-        openBtn.addEventListener('click', () => {
-            mainNav.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            setTimeout(() => input.focus(), 100); // Auto-open Keyboard
-        });
-    }
+        if(openBtn && overlay) {
+            openBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                overlay.classList.remove('hidden');
+                // Force focus to open keyboard
+                if(input) {
+                    input.value = ""; // Clear previous search
+                    input.focus();
+                }
+            });
+        }
 
-    if(closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            overlay.classList.add('hidden');
-            mainNav.classList.remove('hidden');
-        });
-    }
+        if(closeBtn && overlay) {
+            closeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                overlay.classList.add('hidden');
+            });
+        }
+    }, 100);
 
     // --- MENU & AUTH LOGIC ---
     const menuList = document.getElementById('menu-list');
