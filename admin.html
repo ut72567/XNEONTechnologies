@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KD Admin Panel</title>
+    <title>XNEON Technologies Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { background-color: #000; color: #ccc; }</style>
 </head>
@@ -117,7 +117,7 @@
         loadCategories();
         loadSlides();
 
-        // --- ORDER LOGIC (Fixed Address Display) ---
+        // --- ORDER LOGIC ---
         function loadOrders() {
             const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
             onSnapshot(q, (snap) => {
