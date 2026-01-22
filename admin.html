@@ -23,10 +23,10 @@
             <img src="https://via.placeholder.com/150x50?text=XNEON" class="h-12 mx-auto mb-6 opacity-80">
             
             <h2 class="text-2xl font-bold text-white mb-2">Admin Verification</h2>
-            <p class="text-gray-500 text-sm mb-6">Enter your registered email to receive OTP.</p>
+            <p class="text-gray-500 text-sm mb-6">Enter registered email to receive OTP.</p>
 
             <div id="step-email">
-                <input type="email" id="admin-email-input" class="w-full bg-black border border-gray-700 text-white p-3 rounded-lg mb-4 text-center focus:border-red-600 outline-none transition" placeholder="Enter Admin Email">
+                <input type="email" id="admin-email-input" class="w-full bg-black border border-gray-700 text-white p-3 rounded-lg mb-4 text-center focus:border-red-600 outline-none transition" placeholder="Enter Email">
                 <button onclick="sendOTP()" id="send-btn" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition">SEND OTP</button>
             </div>
 
@@ -108,17 +108,19 @@
         // =========================================================
         // 🔴 SECURITY SETTING - APNA ASLI EMAIL YAHAN LIKHO
         // =========================================================
-        const AUTHORIZED_EMAIL = "tumhara_asli_email@gmail.com"; 
+        // Example: const AUTHORIZED_EMAIL = "tripathivlogs@gmail.com";
+        const AUTHORIZED_EMAIL = "tripathivlogs39@gmail.com"; 
         // =========================================================
 
         let generatedOTP = null;
 
+        // Make functions global for HTML onclicks
         window.sendOTP = function() {
             let emailInput = document.getElementById('admin-email-input').value;
             const status = document.getElementById('status-msg');
             const btn = document.getElementById('send-btn');
 
-            // Input safai
+            // Clean input
             emailInput = emailInput.trim().toLowerCase();
             const validEmail = AUTHORIZED_EMAIL.trim().toLowerCase();
 
@@ -127,45 +129,41 @@
                 return;
             }
 
-            // OTP Generate karo
+            // Generate OTP
             generatedOTP = Math.floor(100000 + Math.random() * 900000);
             
             // UI Update
-            status.innerText = "Sending Verification...";
+            status.innerText = "Processing...";
             status.classList.remove('hidden');
             btn.disabled = true;
-            btn.innerText = "Processing...";
+            btn.innerText = "Wait...";
 
-            // 🚀 MAGIC: Hamesha ADMIN ko email bhejo
-            // Chahe chor ho ya admin, email sirf ADMIN (validEmail) ko jayega.
+            // 🚀 MAGIC FIX: to_email is NOW HARDCODED to AUTHORIZED_EMAIL
+            // Chahe koi bhi email dale, email sirf tumhare paas aayega.
             const templateParams = {
-                to_email: validEmail,        // ⚠️ Hamesha Tumhare Email par jayega
-                otp_code: generatedOTP,      // OTP Code
-                intruder_email: emailInput   // Wo email jo box mein dala gaya
+                to_email: validEmail,        // ⚠️ ALWAYS SEND TO ADMIN (YOU)
+                otp_code: generatedOTP,      // The Code
+                intruder_email: emailInput   // Who is trying to login
             };
 
             emailjs.send("service_3vbmeu4", "template_0lecpgb", templateParams)
                 .then(function(response) {
-                    console.log("Email sent successfully!", response.status, response.text);
+                    console.log("Email sent to ADMIN:", validEmail);
 
-                    // Ab check karo ki banda asli hai ya nakli
                     if(emailInput === validEmail) {
-                        // ✅ ASLI ADMIN
+                        // Correct Email -> Show OTP Box
                         status.innerText = "✅ OTP Sent! Check your inbox.";
                         status.classList.remove('text-yellow-500');
                         status.classList.add('text-green-500');
-                        
                         document.getElementById('step-email').classList.add('hidden');
                         document.getElementById('step-otp').classList.remove('hidden');
                     } else {
-                        // ❌ NAKLI BANDA (HACKER)
-                        // Email tumhe mil chuka hai background mein.
-                        // Ab hacker ko error dikhao.
-                        alert("❌ Access Denied: This email is not authorized. The Administrator has been notified of this attempt.");
+                        // Incorrect Email -> Show Error (But Email is already sent to you!)
+                        alert("❌ Access Denied: This email is not authorized.\n\n⚠️ However, the Admin (You) has received an alert with this login attempt details.");
                         location.reload();
                     }
                 }, function(error) {
-                    alert("⚠️ Network Error: Email could not be sent.");
+                    alert("FAILED to send OTP. Check console.");
                     console.log("EmailJS Error:", error);
                     btn.disabled = false;
                     btn.innerText = "SEND OTP";
@@ -183,10 +181,10 @@
             }
         };
 
-        // ... Baaki functions same rahenge ...
         window.logout = function() { location.reload(); };
+
+        // --- EXISTING ADMIN LOGIC ---
         window.showTab = (tabName) => { ['orders', 'products', 'categories', 'slider', 'settings'].forEach(t => { document.getElementById('tab-'+t).style.display = (t === tabName) ? 'block' : 'none'; }); };
-        // ... (Baaki loadOrders wagera purana code same hai) ...
         loadOrders(); loadProducts(); loadCategories(); loadSlides();
         
         function loadOrders() { const q = query(collection(db, "orders"), orderBy("timestamp", "desc")); onSnapshot(q, (snap) => { const list = document.getElementById('admin-orders-list'); list.innerHTML = ""; if(snap.empty) { list.innerHTML = "<p>No orders.</p>"; return; } snap.forEach(d => { const o = d.data(); list.innerHTML += `<div class="bg-[#151515] p-4 rounded border border-gray-800 mb-4"><div class="flex justify-between mb-2"><span class="font-bold text-white">#${d.id.slice(0,6)}</span><span class="text-${o.status === 'Cancelled' ? 'red' : 'green'}-500 font-bold text-sm">${o.status}</span></div><div class="bg-black/50 p-3 rounded mb-3 border border-gray-800"><p class="text-xs text-gray-400 uppercase font-bold mb-1">Shipping Address:</p><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">${o.address || "No address provided"}</p></div><p class="text-sm text-gray-400">Total: ${formatINR(o.total)} | Type: ${o.paymentMethod}</p><div class="flex gap-2 mt-3 flex-wrap"><button onclick="updateStatus('${d.id}', 'Confirmed')" class="px-3 py-1 bg-green-900 text-green-200 text-xs rounded">Confirm</button><button onclick="openShipModal('${d.id}')" class="px-3 py-1 bg-blue-900 text-blue-200 text-xs rounded">Shipped</button><button onclick="updateStatus('${d.id}', 'Delivered')" class="px-3 py-1 bg-gray-700 text-white text-xs rounded">Delivered</button><button onclick="cancelOrder('${d.id}')" class="px-3 py-1 bg-red-900 text-red-200 text-xs rounded">Cancel</button></div></div>`; }); }); }
