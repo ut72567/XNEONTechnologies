@@ -35,7 +35,7 @@ export function loadNavbar() {
             <div class="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
                 
                 <a href="index.html" class="flex-shrink-0">
-                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=KD+DRONES" class="h-12 md:h-16 w-auto object-contain transition-all" alt="KD">
+                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON+Technologies" class="h-12 md:h-16 w-auto object-contain transition-all" alt="XNEON Technologies">
                 </a>
 
                 <div class="flex-1 max-w-md mx-2">
