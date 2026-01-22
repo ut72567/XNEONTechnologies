@@ -25,25 +25,41 @@ export const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 };
 
+// --- GLOBAL TOGGLE FUNCTION (Search Popup) ---
+window.toggleSearch = () => {
+    const overlay = document.getElementById('search-overlay');
+    const input = document.getElementById('search-input');
+    
+    if (overlay.classList.contains('hidden')) {
+        // OPEN
+        overlay.classList.remove('hidden');
+        setTimeout(() => input.focus(), 100); 
+    } else {
+        // CLOSE
+        overlay.classList.add('hidden');
+        input.value = ""; 
+    }
+};
+
 // --- NAVBAR LOGIC ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
-    // 1. Render Structure (Strict Layout)
+    // 1. Render Structure (Fixed Layout)
     nav.innerHTML = `
         <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[70px] flex items-center">
             
-            <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-3 flex items-center justify-between">
+            <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-4 flex items-center justify-between h-full">
                 
-                <a href="index.html" class="flex-shrink-0 block overflow-hidden">
-                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON" class="h-10 md:h-12 w-auto max-w-[140px] object-contain" alt="XNEON">
+                <a href="index.html" class="flex-shrink-0 w-[120px] md:w-[150px] h-full flex items-center overflow-hidden">
+                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON" class="w-full h-full object-contain object-left" alt="XNEON">
                 </a>
 
                 <div class="flex-1"></div>
 
-                <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
                     
-                    <button id="open-search-btn" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800 focus:outline-none cursor-pointer">
+                    <button onclick="window.toggleSearch()" class="text-white hover:text-red-500 transition p-2 rounded-full hover:bg-gray-800 focus:outline-none cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </button>
 
@@ -66,7 +82,7 @@ export function loadNavbar() {
                         </div>
                         <input type="text" id="search-input" class="block w-full py-2 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-base" placeholder="Search products...">
                     </div>
-                    <button id="close-search-btn" class="text-gray-400 hover:text-white font-bold px-3 py-2 transition uppercase text-sm tracking-wide cursor-pointer">Cancel</button>
+                    <button onclick="window.toggleSearch()" class="text-gray-400 hover:text-white font-bold px-3 py-2 transition uppercase text-sm tracking-wide cursor-pointer">Cancel</button>
                 </div>
             </div>
 
@@ -98,27 +114,6 @@ export function loadNavbar() {
             document.getElementById('nav-logo').src = snap.data().logo;
         }
     });
-
-    // --- ⚡ EVENT BINDING (Search Logic - Bulletproof) ---
-    setTimeout(() => {
-        const openBtn = document.getElementById('open-search-btn');
-        const closeBtn = document.getElementById('close-search-btn');
-        const overlay = document.getElementById('search-overlay');
-        const input = document.getElementById('search-input');
-
-        if(openBtn) {
-            openBtn.onclick = function() {
-                overlay.classList.remove('hidden');
-            };
-        }
-
-        if(closeBtn) {
-            closeBtn.onclick = function() {
-                overlay.classList.add('hidden');
-                input.value = ""; 
-            };
-        }
-    }, 500);
 
     // --- MENU & AUTH LOGIC ---
     const menuList = document.getElementById('menu-list');
