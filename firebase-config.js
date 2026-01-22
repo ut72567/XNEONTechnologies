@@ -19,6 +19,9 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
+// Debug Log
+console.log("🔥 Firebase Config Loaded: EXTRA LARGE ICONS");
+
 export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, ref, uploadBytes, getDownloadURL };
 
 export const formatINR = (amount) => {
@@ -39,58 +42,58 @@ window.toggleSearch = () => {
     }
 };
 
-// --- NAVBAR LOGIC (Balanced Fit: Logo Frame + Big Buttons) ---
+// --- NAVBAR LOGIC (BIG ICONS MODE) ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     
     // 1. Render Structure
     nav.innerHTML = `
-        <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[60px] md:h-[80px] flex items-center">
+        <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[70px] flex items-center">
             
-            <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-3 flex items-center justify-between h-full">
+            <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-2 flex items-center justify-between h-full">
                 
-                <a href="index.html" class="flex-shrink-0 max-w-[150px] h-full flex items-center overflow-hidden">
-                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON" class="h-10 md:h-12 w-auto object-contain object-left" alt="XNEON">
+                <a href="index.html" class="flex-shrink-0 w-[110px] md:w-[150px] h-full flex items-center overflow-hidden">
+                    <img id="nav-logo" src="https://via.placeholder.com/150x50?text=XNEON" class="h-8 md:h-12 w-full object-contain object-left" alt="XNEON">
                 </a>
 
                 <div class="flex-1"></div>
 
-                <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                <div class="flex items-center gap-1 md:gap-4 flex-shrink-0">
                     
-                    <button onclick="window.toggleSearch()" class="text-white p-2 rounded-full focus:outline-none cursor-pointer hover:bg-gray-800 transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <button onclick="window.toggleSearch()" class="text-white p-2 rounded-full focus:outline-none cursor-pointer hover:bg-gray-800">
+                        <svg class="w-[28px] h-[28px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </button>
 
-                    <a href="cart.html" class="relative text-white p-2 rounded hover:bg-gray-800 transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        <span id="cart-count" class="absolute top-0 right-0 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                    <a href="cart.html" class="relative text-white p-2 rounded hover:bg-gray-800">
+                        <svg class="w-[28px] h-[28px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span id="cart-count" class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </a>
 
-                    <button id="menu-toggle" class="text-white p-2 rounded hover:bg-gray-800 transition">
-                        <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    <button id="menu-toggle" class="text-white p-2 rounded hover:bg-gray-800">
+                        <svg class="w-[34px] h-[34px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                     </button>
                 </div>
             </div>
 
-            <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[60px] md:h-[80px] bg-black z-[100] flex items-center px-4 border-b border-gray-800 shadow-2xl transition-all duration-200">
+            <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[70px] bg-black z-[100] flex items-center px-4 border-b border-gray-800 shadow-2xl transition-all duration-200">
                 <div class="w-full max-w-screen-xl mx-auto flex items-center gap-3">
                     <div class="flex-1 relative">
                          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        <input type="text" id="search-input" class="block w-full py-2 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-sm md:text-base" placeholder="Search...">
+                        <input type="text" id="search-input" class="block w-full py-2 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-base" placeholder="Search...">
                     </div>
-                    <button onclick="window.toggleSearch()" class="text-gray-400 font-bold px-3 py-2 text-xs md:text-sm uppercase tracking-wide cursor-pointer hover:text-white">Cancel</button>
+                    <button onclick="window.toggleSearch()" class="text-gray-400 font-bold px-3 py-2 text-sm uppercase tracking-wide cursor-pointer hover:text-white">Cancel</button>
                 </div>
             </div>
 
-            <div id="mobile-menu" class="hidden bg-[#111] border-b border-gray-800 absolute w-full left-0 top-[60px] md:top-[80px] shadow-xl z-40 h-screen">
+            <div id="mobile-menu" class="hidden bg-[#111] border-b border-gray-800 absolute w-full left-0 top-[70px] shadow-xl z-40 h-screen">
                 <ul class="flex flex-col font-medium text-lg" id="menu-list">
                     </ul>
             </div>
         </nav>
         
-        <div class="h-[60px] md:h-[80px]"></div> 
+        <div class="h-[70px]"></div> 
 
         <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-4">
             <div class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-sm relative">
@@ -124,7 +127,7 @@ export function loadNavbar() {
         </li>
         <li>
             <a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 <span>Categories</span>
             </a>
         </li>
