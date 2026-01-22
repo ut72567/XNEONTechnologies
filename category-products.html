@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products | KD Drones</title>
+    <title>Products | XNEON Technologies</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { background-color: #050505; color: #fff; }</style>
 </head>
@@ -30,14 +30,13 @@
 
         if(catName) {
             document.getElementById('page-title').innerText = catName;
-            document.title = `${catName} | KD Drones`;
+            document.title = `${catName} | XNEON Technologies`;
             loadProducts(catName);
         } else {
             grid.innerHTML = "<p class='col-span-full text-center'>Category not found.</p>";
         }
 
         async function loadProducts(category) {
-            // Filter products where 'category' matches the URL param
             const q = query(collection(db, "products"), where("category", "==", category));
             const snap = await getDocs(q);
 
