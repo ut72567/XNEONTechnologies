@@ -24,7 +24,6 @@ const storage = getStorage(app);
     if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm");
 })();
 
-// 🔴 EXPORTING EVERYTHING (Zaroori hai)
 export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, ref, uploadBytes, getDownloadURL };
 
 export const formatINR = (amount) => {
@@ -94,10 +93,8 @@ export function loadNavbar() {
         </div>
     `;
 
-    // Logo Logic
     getDoc(doc(db, "settings", "general")).then(snap => { if(snap.exists() && snap.data().logo) document.getElementById('nav-logo').src = snap.data().logo; });
 
-    // Auth Logic
     let generatedCustomerOTP = null;
     let tempEmail = "", tempPass = "";
 
@@ -163,7 +160,9 @@ export function loadNavbar() {
     }, 500);
 
     const menuList = document.getElementById('menu-list');
-    const commonLinks = `<li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">Home</a></li>`;
+    
+    // 👇 YEH RAHA CATEGORIES FIX 👇
+    const commonLinks = `<li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">Home</a></li><li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">Categories</a></li>`;
 
     onAuthStateChanged(auth, (user) => {
         if(user) {
@@ -176,7 +175,6 @@ export function loadNavbar() {
 
     document.getElementById('menu-toggle')?.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
     
-    // Cart Count Logic
     onAuthStateChanged(auth, (user) => {
         if (user) onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
             const count = document.getElementById('cart-count');
