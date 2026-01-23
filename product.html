@@ -3,158 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XNEON | Home</title>
+    <title>Product Details | XNEON</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
        (function(){
-          emailjs.init("7ps995woJ-0Gp79Nm"); // Aapki Public Key
+          if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm"); // Aapki Public Key
        })();
     </script>
 
     <style>
-        body { background-color: #050505; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .slider-scroll::-webkit-scrollbar { display: none; }
-        .product-card { transition: transform 0.2s; }
-        .product-card:active { transform: scale(0.98); }
+        body { background-color: #050505; color: #e5e5e5; font-family: sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
 
     <div id="navbar"></div>
 
-    <div class="relative w-full overflow-hidden mt-2" id="home-slider">
-        <div id="slider-track" class="flex transition-transform duration-500 ease-out h-[50vh] md:h-[600px]">
+    <div id="main-content" class="max-w-screen-xl mx-auto p-4 mt-8 flex flex-col md:flex-row gap-8 pb-20">
+        <div class="w-full md:w-1/2">
+            <div class="bg-[#111] rounded-xl border border-gray-800 overflow-hidden p-2">
+                <img id="p-img" class="w-full h-[350px] md:h-[450px] object-contain" src="https://via.placeholder.com/400?text=Loading...">
             </div>
-        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2" id="slider-dots"></div>
+            <div id="thumbnails" class="flex gap-2 mt-4 overflow-x-auto no-scrollbar"></div>
+        </div>
+
+        <div class="w-full md:w-1/2 space-y-4">
+            <h1 id="p-name" class="text-3xl md:text-4xl font-bold text-white leading-tight">Loading Product...</h1>
+            <p id="p-price" class="text-3xl text-red-500 font-bold">₹0</p>
+            
+            <div class="bg-[#111] p-4 rounded-lg border border-gray-800">
+                <h3 class="font-bold text-white mb-2 text-sm uppercase text-gray-500">Description</h3>
+                <p id="p-desc" class="text-gray-300 leading-relaxed">Please wait...</p>
+            </div>
+            
+            <div class="bg-[#111] p-4 rounded-lg border border-gray-800">
+                <h3 class="font-bold text-white mb-2 text-sm uppercase text-gray-500">Specifications</h3>
+                <p id="p-specs" class="text-sm text-gray-400 whitespace-pre-wrap font-mono">Loading...</p>
+            </div>
+
+            <div class="flex gap-3 mt-6 fixed bottom-0 left-0 w-full p-4 bg-black/90 md:static md:bg-transparent md:p-0 z-40 border-t border-gray-800 md:border-0">
+                <button id="btn-add-cart" class="flex-1 bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-700 transition border border-gray-600">
+                    ADD TO CART
+                </button>
+                <button id="btn-buy-now" class="flex-1 bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                    BUY NOW
+                </button>
+            </div>
+        </div>
     </div>
 
-    <section id="products" class="max-w-screen-xl mx-auto p-4 mt-4 pb-20">
-        <div class="flex justify-between items-end mb-6">
-            <h2 class="text-3xl font-bold tracking-tight text-white">Latest Drones</h2>
-            <span id="result-count" class="text-xs text-gray-500 hidden">Showing all</span>
+    <div id="checkout-modal" class="fixed inset-0 bg-black/95 z-[60] hidden overflow-y-auto">
+        <div class="min-h-screen flex items-center justify-center p-4">
+            
+            <div id="checkout-form-container" class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-lg relative shadow-2xl">
+                <button onclick="closeCheckout()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-2xl">&times;</button>
+                
+                <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-2">Shipping Details</h2>
+
+                <div class="space-y-3">
+                    <div class="grid grid-cols-1 gap-1">
+                        <label class="text-xs text-gray-400 uppercase font-bold">Full Name</label>
+                        <input type="text" id="addr-name" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-white outline-none" placeholder="Enter your name">
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-1">
+                        <label class="text-xs text-gray-400 uppercase font-bold">Email (Optional)</label>
+                        <input type="email" id="addr-email" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-white outline-none" placeholder="For order updates">
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-1">
+                        <label class="text-xs text-gray-400 uppercase font-bold">Street / Village</label>
+                        <input type="text" id="addr-street" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-white outline-none" placeholder="House No, Street, Area">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase font-bold">City</label>
+                            <input type="text" id="addr-city" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-white outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase font-bold">State</label>
+                            <input type="text" id="addr-state" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-white outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-1">
+                        <label class="text-xs text-gray-400 uppercase font-bold">Country</label>
+                        <input type="text" id="addr-country" value="India" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-white outline-none">
+                    </div>
+                </div>
+
+                <h3 class="text-lg font-bold text-white mt-6 mb-3 border-t border-gray-800 pt-4">Payment Method</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 p-3 bg-black border border-gray-700 rounded cursor-pointer hover:border-white">
+                        <input type="radio" name="payment" value="COD" checked class="accent-white h-5 w-5">
+                        <span class="text-white font-bold">Cash on Delivery (COD)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-black border border-gray-700 rounded cursor-pointer hover:border-white opacity-70" onclick="checkPaymentAvailability()">
+                        <input type="radio" name="payment" value="ONLINE" id="pay-online" class="accent-white h-5 w-5">
+                        <span class="text-gray-400">Online Payment (UPI/Card)</span>
+                    </label>
+                </div>
+
+                <button onclick="placeOrder()" id="btn-confirm-order" class="w-full bg-green-600 text-white font-bold text-lg py-4 rounded-lg mt-6 hover:bg-green-700 transition shadow-lg shadow-green-900/40">
+                    CONFIRM ORDER
+                </button>
+            </div>
+
+            <div id="order-success" class="hidden text-center bg-[#111] p-8 rounded-2xl border border-gray-800">
+                <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(34,197,94,0.6)] animate-bounce">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h2 class="text-3xl font-bold text-white mb-2">Order Confirmed!</h2>
+                <p class="text-gray-400 mb-6">Thank you. Your order has been placed.</p>
+                <button onclick="window.location.href='orders.html'" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200">Go to My Orders</button>
+            </div>
+
         </div>
-        
-        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="animate-pulse bg-gray-800 h-64 rounded-xl"></div>
-            <div class="animate-pulse bg-gray-800 h-64 rounded-xl"></div>
-        </div>
-    </section>
+    </div>
 
     <script type="module">
-        import { db, loadNavbar, collection, getDocs, formatINR } from './firebase-config.js';
+        import { db, auth, loadNavbar, doc, getDoc, addDoc, collection, serverTimestamp, formatINR, onAuthStateChanged } from './firebase-config.js';
 
-        // 1. Load Navbar (Isme Login/Signup Modal hai)
+        // 1. Load Navbar
         loadNavbar();
 
-        let allProducts = [];
+        // 2. Get Product ID from URL
+        const params = new URLSearchParams(window.location.search);
+        const pid = params.get('id');
+        let productData = null;
 
-        // 2. Load Slider
-        const sliderTrack = document.getElementById('slider-track');
-        getDocs(collection(db, "slider")).then(snap => {
-            if(snap.empty) {
-                sliderTrack.innerHTML = `<div class="w-full flex-shrink-0 bg-gray-800 flex items-center justify-center h-full"><h2>No Slides Configured</h2></div>`;
-                return;
-            }
-            let slides = "";
-            snap.forEach(doc => {
-                const data = doc.data();
-                slides += `
-                <div class="w-full flex-shrink-0 relative cursor-pointer bg-black" onclick="window.location.href='${data.link || '#'}'">
-                    <img src="${data.image}" class="w-full h-full object-contain">
-                    <div class="absolute bottom-0 bg-gradient-to-t from-black via-black/50 to-transparent w-full p-8 pointer-events-none">
-                        <h2 class="text-2xl font-bold text-white drop-shadow-lg">${data.title || ''}</h2>
-                    </div>
-                </div>`;
+        // 3. Fetch Product Logic
+        if(pid) {
+            getDoc(doc(db, "products", pid)).then(snap => {
+                if(snap.exists()) {
+                    productData = snap.data();
+                    document.getElementById('p-name').innerText = productData.name;
+                    document.getElementById('p-price').innerText = formatINR(productData.price);
+                    document.getElementById('p-desc').innerText = productData.desc;
+                    document.getElementById('p-specs').innerText = productData.specs || "No specs available.";
+                    
+                    const mainImg = (productData.images && productData.images.length > 0) ? productData.images[0] : productData.image;
+                    document.getElementById('p-img').src = mainImg;
+
+                    // Thumbnails Logic
+                    if(productData.images && productData.images.length > 1) {
+                        const tContainer = document.getElementById('thumbnails');
+                        productData.images.forEach(img => {
+                            tContainer.innerHTML += `<img src="${img}" onclick="document.getElementById('p-img').src='${img}'" class="w-16 h-16 object-cover rounded-lg border border-gray-700 cursor-pointer hover:border-white transition">`;
+                        });
+                    }
+                } else {
+                    document.getElementById('main-content').innerHTML = "<h2 class='text-white text-center w-full mt-10 text-xl'>Product not found.</h2>";
+                }
             });
-            sliderTrack.innerHTML = slides;
-            
-            let index = 0;
-            const total = snap.size;
-            if(total > 1) {
-                setInterval(() => {
-                    index = (index + 1) % total;
-                    sliderTrack.style.transform = `translateX(-${index * 100}%)`;
-                }, 4000);
-            }
-        });
+        } else {
+            document.getElementById('main-content').innerHTML = "<h2 class='text-white text-center w-full mt-10 text-xl'>Invalid Link.</h2>";
+        }
 
-        // 3. Load Products & Initialize Search Logic
-        const grid = document.getElementById('product-grid');
-        const resultCount = document.getElementById('result-count');
-
-        async function initProducts() {
-            const snap = await getDocs(collection(db, "products"));
-            
-            if(snap.empty) { 
-                grid.innerHTML = "<p class='col-span-full text-center text-gray-500'>No products found.</p>"; 
+        // 4. Add To Cart Button
+        document.getElementById('btn-add-cart').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if(!user) { 
+                alert("Please Login First!"); 
+                document.getElementById('auth-modal').classList.remove('hidden'); 
                 return; 
             }
             
-            allProducts = [];
-            snap.forEach(doc => {
-                allProducts.push({ id: doc.id, ...doc.data() });
-            });
-
-            renderProducts(allProducts);
-        }
-
-        function renderProducts(productList) {
-            grid.innerHTML = "";
+            const btn = document.getElementById('btn-add-cart');
+            btn.innerText = "Adding...";
             
-            if(productList.length === 0) {
-                grid.innerHTML = `
-                <div class="col-span-full text-center py-10">
-                    <p class="text-gray-500">No products match your search.</p>
-                </div>`;
+            try {
+                await addDoc(collection(db, "carts", user.uid, "items"), {
+                    productId: pid,
+                    name: productData.name,
+                    price: productData.price,
+                    image: (productData.images && productData.images.length > 0) ? productData.images[0] : productData.image,
+                    qty: 1
+                });
+                alert("✅ Added to Cart!");
+                btn.innerText = "ADD TO CART";
+            } catch(e) { 
+                alert("Error: " + e.message); 
+                btn.innerText = "ADD TO CART";
+            }
+        });
+
+        // 5. Buy Now Button (Opens Modal)
+        document.getElementById('btn-buy-now').addEventListener('click', () => {
+            const user = auth.currentUser;
+            if(!user) { 
+                alert("Please Login First to Buy!"); 
+                document.getElementById('auth-modal').classList.remove('hidden'); 
+                return; 
+            }
+            // Show Checkout Modal
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        });
+
+        // 6. Modal Functions (Make Global)
+        window.closeCheckout = () => {
+            document.getElementById('checkout-modal').classList.add('hidden');
+        };
+
+        window.checkPaymentAvailability = () => {
+            const onlineRadio = document.getElementById('pay-online');
+            // Thoda delay taaki click register ho
+            setTimeout(() => {
+                if(onlineRadio.checked) {
+                    alert("Currently online payment method is unavailable. Please select COD.");
+                    // Reset to COD automatically
+                    document.querySelector('input[value="COD"]').checked = true;
+                }
+            }, 50);
+        };
+
+        window.placeOrder = async () => {
+            const user = auth.currentUser;
+            if(!user) return;
+
+            // Get Form Data
+            const name = document.getElementById('addr-name').value.trim();
+            const email = document.getElementById('addr-email').value.trim();
+            const street = document.getElementById('addr-street').value.trim();
+            const city = document.getElementById('addr-city').value.trim();
+            const state = document.getElementById('addr-state').value.trim();
+            const country = document.getElementById('addr-country').value.trim();
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+
+            // Validation
+            if(!name || !street || !city || !state || !country) {
+                alert("Please fill all address fields.");
                 return;
             }
 
-            productList.forEach(p => {
-                const priceVal = p.price ? Number(p.price) : 0;
-                const displayImage = (p.images && p.images.length > 0) ? p.images[0] : p.image;
+            const fullAddress = `${name}\n${email ? email + '\n' : ''}${street}, ${city}, ${state}, ${country}`;
+            const btn = document.getElementById('btn-confirm-order');
+            
+            btn.disabled = true;
+            btn.innerText = "Processing...";
 
-                grid.innerHTML += `
-                <div class="product-card bg-[#111] border border-gray-800 rounded-xl overflow-hidden cursor-pointer group hover:border-gray-600 transition" onclick="window.location.href='product.html?id=${p.id}'">
-                    <div class="h-40 w-full bg-gray-900 overflow-hidden relative">
-                         <img src="${displayImage}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    </div>
-                    <div class="p-3">
-                        <h3 class="text-white font-semibold text-lg truncate">${p.name}</h3>
-                        <p class="text-gray-400 text-xs mt-1 truncate line-clamp-2">${p.desc}</p>
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="text-kd-red font-bold text-lg">${formatINR(priceVal)}</span>
-                            <button class="bg-white text-black text-xs px-3 py-1 rounded-full font-bold hover:bg-gray-200">BUY</button>
-                        </div>
-                    </div>
-                </div>`;
-            });
-        }
-
-        // 4. Safe Search Listener
-        setTimeout(() => {
-            const searchInput = document.getElementById('search-input');
-            if(searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase().trim();
-                    const filtered = allProducts.filter(p => {
-                        const pName = p.name ? p.name.toLowerCase() : "";
-                        const pDesc = p.desc ? p.desc.toLowerCase() : "";
-                        return pName.includes(term) || pDesc.includes(term);
-                    });
-                    renderProducts(filtered);
-                    if(term.length > 0) {
-                        resultCount.classList.remove('hidden');
-                        resultCount.innerText = `Found ${filtered.length} result(s)`;
-                    } else {
-                        resultCount.classList.add('hidden');
-                    }
+            try {
+                // Save Order to Firebase
+                await addDoc(collection(db, "orders"), {
+                    userId: user.uid,
+                    userEmail: user.email,
+                    items: [{
+                        productId: pid,
+                        name: productData.name,
+                        price: productData.price,
+                        image: (productData.images && productData.images.length > 0) ? productData.images[0] : productData.image,
+                        qty: 1
+                    }],
+                    total: productData.price,
+                    address: fullAddress,
+                    paymentMethod: paymentMethod, 
+                    status: "Pending",
+                    timestamp: serverTimestamp()
                 });
-            }
-        }, 100);
 
-        initProducts();
+                // ✅ Show Success Animation
+                document.getElementById('checkout-form-container').classList.add('hidden');
+                document.getElementById('order-success').classList.remove('hidden');
+
+            } catch(error) {
+                alert("Order Failed: " + error.message);
+                btn.disabled = false;
+                btn.innerText = "CONFIRM ORDER";
+            }
+        };
+
     </script>
 </body>
 </html>
