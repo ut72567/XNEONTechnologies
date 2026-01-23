@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XNEON Technologies | Premium Store</title>
+    <title>XNEON | Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { colors: { 'kd-red': '#D72638', 'kd-dark': '#0a0a0a' } } }
-        }
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("7ps995woJ-0Gp79Nm"); // Aapki Public Key
+       })();
     </script>
+
     <style>
         body { background-color: #050505; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         .slider-scroll::-webkit-scrollbar { display: none; }
@@ -43,7 +45,7 @@
     <script type="module">
         import { db, loadNavbar, collection, getDocs, formatINR } from './firebase-config.js';
 
-        // 1. Load Navbar (IMMEDIATELY)
+        // 1. Load Navbar (Isme Login/Signup Modal hai)
         loadNavbar();
 
         let allProducts = [];
