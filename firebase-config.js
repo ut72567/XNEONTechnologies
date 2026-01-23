@@ -1,9 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// 🔴 CONFIGURATION (xneon-c12a2)
+// 🔴 CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyCCc2pN-sdmwoz1aXxqX4rnN1-oUU_5s7w",
   authDomain: "xneon-c12a2.firebaseapp.com",
@@ -19,12 +19,13 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// 1️⃣ EMAILJS LOAD (For Customer OTP)
+// Initialize EmailJS safely
 (function() {
-    if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm"); // Public Key
+    if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm");
 })();
 
-export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, ref, uploadBytes, getDownloadURL };
+// 🔴 EXPORTING EVERYTHING (Zaroori hai)
+export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, ref, uploadBytes, getDownloadURL };
 
 export const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
@@ -37,10 +38,11 @@ window.toggleSearch = () => {
     else { overlay.classList.add('hidden'); input.value = ""; }
 };
 
-// --- NAVBAR LOGIC WITH CUSTOMER OTP ---
+// --- NAVBAR LOGIC ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
-    
+    if(!nav) return;
+
     nav.innerHTML = `
         <nav class="w-full bg-black/95 backdrop-blur-md fixed top-0 z-50 border-b border-gray-800 shadow-md h-[70px] flex items-center">
             <div id="nav-main" class="w-full max-w-screen-xl mx-auto px-2 flex items-center justify-between h-full">
@@ -57,19 +59,18 @@ export function loadNavbar() {
 
             <div id="search-overlay" class="hidden fixed top-0 left-0 w-full h-[70px] bg-black z-[100] flex items-center px-4 border-b border-gray-800 shadow-2xl">
                 <div class="w-full max-w-screen-xl mx-auto flex items-center gap-3">
-                    <div class="flex-1 relative"><div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div><input type="text" id="search-input" class="block w-full py-2 pl-10 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-base" placeholder="Search..."></div>
-                    <button onclick="window.toggleSearch()" class="text-gray-400 font-bold px-3 py-2 text-sm uppercase tracking-wide cursor-pointer hover:text-white">Cancel</button>
+                    <div class="flex-1 relative"><input type="text" id="search-input" class="block w-full py-2 pl-3 pr-3 text-white bg-[#1a1a1a] border border-gray-700 rounded-lg focus:border-red-600 focus:outline-none placeholder-gray-500 text-base" placeholder="Search..."></div>
+                    <button onclick="window.toggleSearch()" class="text-gray-400 font-bold px-3 py-2 text-sm uppercase">Cancel</button>
                 </div>
             </div>
 
             <div id="mobile-menu" class="hidden bg-[#111] border-b border-gray-800 absolute w-full left-0 top-[70px] shadow-xl z-40 h-screen"><ul class="flex flex-col font-medium text-lg" id="menu-list"></ul></div>
         </nav>
-        <div class="h-[70px]"></div> 
+        <div class="h-[70px]"></div>
 
         <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-4">
             <div class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-sm relative shadow-2xl">
                 <button onclick="document.getElementById('auth-modal').classList.add('hidden'); resetAuthUI();" class="absolute top-2 right-4 text-gray-500 text-2xl hover:text-white">&times;</button>
-                
                 <h2 class="text-xl font-bold mb-4 text-white text-center" id="auth-title">Login / Signup</h2>
                 
                 <div id="auth-step-1">
@@ -84,22 +85,21 @@ export function loadNavbar() {
 
                 <div id="auth-step-2" class="hidden text-center">
                     <p class="text-gray-400 text-sm mb-4">OTP sent to <span id="otp-sent-email" class="text-white font-bold"></span></p>
-                    <input type="number" id="auth-otp-input" placeholder="Enter 6-digit OTP" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 text-center text-xl tracking-widest font-bold focus:border-green-500 outline-none">
-                    <button id="btn-verify-otp" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700 shadow-lg shadow-green-900/50">CONFIRM OTP & CREATE ACCOUNT</button>
-                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 underline">Cancel / Change Email</button>
+                    <input type="number" id="auth-otp-input" placeholder="Enter OTP" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 text-center text-xl tracking-widest font-bold focus:border-green-500 outline-none">
+                    <button id="btn-verify-otp" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">CONFIRM & CREATE</button>
+                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 underline">Cancel</button>
                 </div>
-                
                 <p id="auth-msg" class="text-center text-xs mt-3 text-yellow-500 animate-pulse hidden">Processing...</p>
             </div>
         </div>
     `;
 
+    // Logo Logic
     getDoc(doc(db, "settings", "general")).then(snap => { if(snap.exists() && snap.data().logo) document.getElementById('nav-logo').src = snap.data().logo; });
 
-    // --- AUTH LOGIC (With Customer OTP) ---
+    // Auth Logic
     let generatedCustomerOTP = null;
-    let tempEmail = "";
-    let tempPass = "";
+    let tempEmail = "", tempPass = "";
 
     window.resetAuthUI = () => {
         document.getElementById('auth-step-1').classList.remove('hidden');
@@ -114,7 +114,6 @@ export function loadNavbar() {
         const btnVerifyOtp = document.getElementById('btn-verify-otp');
         const authMsg = document.getElementById('auth-msg');
 
-        // 1. LOGIN (Direct Firebase Login)
         if(btnLogin) btnLogin.addEventListener('click', async () => {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-pass').value;
@@ -125,31 +124,17 @@ export function loadNavbar() {
             } catch(e) { authMsg.innerText = "Error: " + e.message; authMsg.classList.add('text-red-500'); }
         });
 
-        // 2. INITIATE SIGNUP (Send OTP)
         if(btnInitSignup) btnInitSignup.addEventListener('click', () => {
             tempEmail = document.getElementById('auth-email').value.trim();
             tempPass = document.getElementById('auth-pass').value;
+            if(!tempEmail || tempPass.length < 6) return alert("Valid email & password (min 6 chars) required.");
 
-            if(!tempEmail || tempPass.length < 6) {
-                alert("Please enter a valid email and a password (min 6 chars).");
-                return;
-            }
-
-            // Generate OTP
             generatedCustomerOTP = Math.floor(100000 + Math.random() * 900000);
-            
-            // UI Updates
-            authMsg.innerText = "Sending Verification OTP...";
-            authMsg.classList.remove('hidden');
+            authMsg.innerText = "Sending OTP..."; authMsg.classList.remove('hidden');
             btnInitSignup.disabled = true;
 
-            // 🟢 UPDATED: USING NEW TEMPLATE ID FOR CUSTOMERS
-            const templateParams = {
-                user_email: tempEmail,   // Customer's Email
-                otp_code: generatedCustomerOTP
-            };
-
-            emailjs.send("service_3vbmeu4", "template_i1g09mi", templateParams) 
+            const templateParams = { user_email: tempEmail, otp_code: generatedCustomerOTP };
+            emailjs.send("service_3vbmeu4", "template_i1g09mi", templateParams)
                 .then(() => {
                     authMsg.classList.add('hidden');
                     document.getElementById('auth-step-1').classList.add('hidden');
@@ -158,70 +143,44 @@ export function loadNavbar() {
                     document.getElementById('auth-title').innerText = "Verify Email";
                     btnInitSignup.disabled = false;
                 }, (err) => {
-                    alert("Failed to send OTP. Check console.");
+                    alert("OTP Failed. Check console.");
                     console.error(err);
                     btnInitSignup.disabled = false;
                     authMsg.classList.add('hidden');
                 });
         });
 
-        // 3. VERIFY OTP & CREATE ACCOUNT
         if(btnVerifyOtp) btnVerifyOtp.addEventListener('click', async () => {
-            const enteredOTP = document.getElementById('auth-otp-input').value;
-            
-            if(parseInt(enteredOTP) === generatedCustomerOTP) {
-                authMsg.innerText = "Creating Account..."; 
-                authMsg.classList.remove('hidden');
-                
+            if(parseInt(document.getElementById('auth-otp-input').value) === generatedCustomerOTP) {
+                authMsg.innerText = "Creating Account..."; authMsg.classList.remove('hidden');
                 try {
-                    // Create User in Firebase Auth
-                    const userCredential = await createUserWithEmailAndPassword(auth, tempEmail, tempPass);
-                    const user = userCredential.user;
-
-                    // Create User Doc in Firestore
-                    await setDoc(doc(db, "users", user.uid), {
-                        email: tempEmail,
-                        createdAt: serverTimestamp(),
-                        role: "customer"
-                    });
-
-                    alert("✅ Account Verified & Created!");
-                    window.location.reload();
-
-                } catch(error) {
-                    alert("Error Creating Account: " + error.message);
-                    authMsg.classList.add('hidden');
-                }
-            } else {
-                alert("❌ Incorrect OTP! Please try again.");
-            }
+                    const uc = await createUserWithEmailAndPassword(auth, tempEmail, tempPass);
+                    await setDoc(doc(db, "users", uc.user.uid), { email: tempEmail, role: "customer", createdAt: serverTimestamp() });
+                    alert("✅ Account Created!"); window.location.reload();
+                } catch(e) { alert(e.message); authMsg.classList.add('hidden'); }
+            } else { alert("❌ Wrong OTP"); }
         });
+    }, 500);
 
-    }, 1000);
-
-    // --- MENU HANDLING ---
     const menuList = document.getElementById('menu-list');
-    const commonLinks = `<li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Home</span></a></li><li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Categories</span></a></li>`;
+    const commonLinks = `<li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">Home</a></li>`;
 
     onAuthStateChanged(auth, (user) => {
-        if(user && !user.isAnonymous) {
-            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>My Orders</span></a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 flex items-center gap-4 border-b border-gray-800"><span>Logout</span></button></li>`;
-            setTimeout(() => { document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => window.location.reload())); }, 500);
+        if(user) {
+            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800">My Orders</a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 border-b border-gray-800">Logout</button></li>`;
+            setTimeout(() => document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => window.location.reload())), 500);
         } else {
-            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 flex items-center gap-4 border-b border-gray-800"><span>Login / Signup</span></button></li>`;
+            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 border-b border-gray-800">Login / Signup</button></li>`;
         }
     });
 
-    const menuToggle = document.getElementById('menu-toggle');
-    if(menuToggle) menuToggle.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
-    updateCartCount();
-}
-
-function updateCartCount() {
+    document.getElementById('menu-toggle')?.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
+    
+    // Cart Count Logic
     onAuthStateChanged(auth, (user) => {
         if (user) onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
             const count = document.getElementById('cart-count');
-            if (count) { if (snap.size > 0) { count.innerText = snap.size; count.classList.remove('hidden'); } else { count.classList.add('hidden'); } }
+            if(count) { count.innerText = snap.size; count.classList.toggle('hidden', snap.size === 0); }
         });
     });
 }
