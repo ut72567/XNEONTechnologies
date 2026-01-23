@@ -1,69 +1,132 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders | XNEON Technologies</title>
+    <title>My Orders | XNEON</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #050505; color: #fff; }</style>
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm");
+       })();
+    </script>
+
+    <style>
+        body { background-color: #050505; color: #e5e5e5; }
+    </style>
 </head>
 <body>
+
     <div id="navbar"></div>
 
-    <div class="max-w-screen-xl mx-auto p-4 pt-8 pb-20">
-        <h1 class="text-3xl font-bold mb-6">My Orders</h1>
+    <div class="max-w-screen-xl mx-auto p-4 mt-6 pb-20">
+        <h1 class="text-3xl font-bold text-white mb-6 border-b border-gray-800 pb-4">My Orders</h1>
         
-        <div id="orders-list" class="space-y-4">
-            <div class="animate-pulse bg-gray-800 h-32 rounded-xl"></div>
+        <div id="orders-container" class="space-y-6">
+            <div class="animate-pulse bg-[#111] h-32 rounded-xl border border-gray-800"></div>
+            <div class="animate-pulse bg-[#111] h-32 rounded-xl border border-gray-800"></div>
         </div>
     </div>
 
     <script type="module">
-        import { db, auth, loadNavbar, collection, query, where, orderBy, onSnapshot, formatINR } from './firebase-config.js';
-        
+        import { db, auth, loadNavbar, collection, query, where, orderBy, onSnapshot, formatINR, onAuthStateChanged } from './firebase-config.js';
+
+        // 1. Load Navbar
         loadNavbar();
 
-        const list = document.getElementById('orders-list');
+        const container = document.getElementById('orders-container');
 
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                // REQUIRES INDEX: userId ASC, timestamp DESC
-                const q = query(collection(db, "orders"), where("userId", "==", user.uid), orderBy("timestamp", "desc"));
-                
-                onSnapshot(q, (snap) => {
-                    list.innerHTML = "";
-                    if(snap.empty) {
-                        list.innerHTML = "<p class='text-gray-500'>No past orders.</p>";
-                        return;
-                    }
-
-                    snap.forEach(doc => {
-                        const o = doc.data();
-                        let itemsHtml = "";
-                        o.items.forEach(i => {
-                            itemsHtml += `<p class="text-sm text-gray-400">${i.name} (x${i.qty})</p>`;
-                        });
-
-                        list.innerHTML += `
-                        <div class="bg-[#111] p-4 rounded-xl border border-gray-800">
-                            <div class="flex justify-between mb-2">
-                                <span class="font-bold text-gray-300">Order #${doc.id.slice(0,6)}</span>
-                                <span class="text-${o.status === 'Cancelled' ? 'red' : 'green'}-500 font-bold text-sm">${o.status}</span>
-                            </div>
-                            <div class="mb-2">
-                                ${itemsHtml}
-                            </div>
-                            <div class="flex justify-between items-end border-t border-gray-800 pt-2 mt-2">
-                                <span class="text-xs text-gray-500">${o.timestamp ? new Date(o.timestamp.toDate()).toLocaleDateString() : 'Just now'}</span>
-                                <span class="font-bold text-xl">${formatINR(o.total)}</span>
-                            </div>
-                        </div>`;
-                    });
-                });
+        // 2. Check Auth & Fetch Orders
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User Logged In -> Fetch Orders
+                fetchOrders(user.uid);
             } else {
-                list.innerHTML = "<p class='text-gray-500'>Please login to see orders.</p>";
+                // Not Logged In
+                container.innerHTML = `
+                    <div class="text-center py-10">
+                        <p class="text-gray-500 mb-4">Please login to view your orders.</p>
+                        <button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="bg-white text-black px-6 py-2 rounded font-bold">Login Now</button>
+                    </div>
+                `;
             }
         });
+
+        function fetchOrders(uid) {
+            // Query: Get orders where userId == uid, sorted by time
+            const q = query(collection(db, "orders"), where("userId", "==", uid), orderBy("timestamp", "desc"));
+
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    container.innerHTML = "<p class='text-gray-500 text-center'>You haven't placed any orders yet.</p>";
+                    return;
+                }
+
+                container.innerHTML = ""; // Clear Loading/Old Data
+
+                snapshot.forEach((doc) => {
+                    const order = doc.data();
+                    const orderId = doc.id;
+                    const date = order.timestamp ? order.timestamp.toDate().toLocaleDateString() : "Just now";
+                    
+                    // Status Color Logic
+                    let statusColor = "text-yellow-500"; // Pending
+                    if(order.status === "Delivered") statusColor = "text-green-500";
+                    if(order.status === "Cancelled") statusColor = "text-red-500";
+                    if(order.status === "Shipped") statusColor = "text-blue-500";
+
+                    // Items HTML Generation
+                    let itemsHtml = "";
+                    order.items.forEach(item => {
+                        itemsHtml += `
+                            <div class="flex items-center gap-4 mt-3 bg-black/40 p-2 rounded">
+                                <img src="${item.image}" class="w-16 h-16 object-cover rounded border border-gray-800">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-bold text-sm line-clamp-1">${item.name}</h4>
+                                    <p class="text-gray-400 text-xs">Qty: ${item.qty} | Price: ${formatINR(item.price)}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    // Full Order Card
+                    container.innerHTML += `
+                        <div class="bg-[#111] border border-gray-800 rounded-xl p-4 md:p-6 shadow-lg">
+                            
+                            <div class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-800 pb-3 mb-3">
+                                <div>
+                                    <span class="text-xs text-gray-500 uppercase font-bold">Order ID</span>
+                                    <p class="text-white font-mono text-sm">#${orderId.slice(0, 8).toUpperCase()}</p>
+                                </div>
+                                <div class="mt-2 md:mt-0 text-right">
+                                    <p class="text-sm text-gray-400">${date}</p>
+                                    <p class="font-bold ${statusColor} uppercase tracking-wider text-sm">${order.status || "Pending"}</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                ${itemsHtml}
+                            </div>
+
+                            <div class="flex justify-between items-center pt-3 border-t border-gray-800">
+                                <div>
+                                    <span class="text-xs text-gray-500 block">Total Amount</span>
+                                    <span class="text-xl font-bold text-white">${formatINR(order.total)}</span>
+                                    <span class="text-xs text-gray-500 ml-2">(${order.paymentMethod})</span>
+                                </div>
+                                
+                                ${order.status === 'Shipped' && order.trackingId ? 
+                                    `<button onclick="alert('Tracking ID: ${order.trackingId}\\nPartner: ${order.deliveryPartner}')" class="bg-blue-900 text-blue-100 text-xs px-3 py-2 rounded border border-blue-700">Track Order</button>` 
+                                : ''}
+                            </div>
+
+                        </div>
+                    `;
+                });
+            });
+        }
     </script>
 </body>
 </html>
