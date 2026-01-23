@@ -24,6 +24,7 @@ const storage = getStorage(app);
     if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm");
 })();
 
+// 🔴 EXPORTING EVERYTHING (Product page crash fix)
 export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, ref, uploadBytes, getDownloadURL };
 
 export const formatINR = (amount) => {
@@ -93,8 +94,10 @@ export function loadNavbar() {
         </div>
     `;
 
+    // Logo Logic
     getDoc(doc(db, "settings", "general")).then(snap => { if(snap.exists() && snap.data().logo) document.getElementById('nav-logo').src = snap.data().logo; });
 
+    // Auth Variables
     let generatedCustomerOTP = null;
     let tempEmail = "", tempPass = "";
 
@@ -161,20 +164,24 @@ export function loadNavbar() {
 
     const menuList = document.getElementById('menu-list');
     
-    // 👇 YEH RAHA CATEGORIES FIX 👇
-    const commonLinks = `<li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">Home</a></li><li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4">Categories</a></li>`;
+    // ✅ Updated Common Links with Categories
+    const commonLinks = `
+        <li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Home</span></a></li>
+        <li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Categories</span></a></li>
+    `;
 
     onAuthStateChanged(auth, (user) => {
         if(user) {
-            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800">My Orders</a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 border-b border-gray-800">Logout</button></li>`;
+            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>My Orders</span></a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Logout</span></button></li>`;
             setTimeout(() => document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => window.location.reload())), 500);
         } else {
-            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 border-b border-gray-800">Login / Signup</button></li>`;
+            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Login / Signup</span></button></li>`;
         }
     });
 
     document.getElementById('menu-toggle')?.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
     
+    // Cart Count Logic
     onAuthStateChanged(auth, (user) => {
         if (user) onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
             const count = document.getElementById('cart-count');
