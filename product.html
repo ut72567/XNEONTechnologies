@@ -1,123 +1,160 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details | XNEON Technologies</title>
+    <title>XNEON | Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("7ps995woJ-0Gp79Nm"); // Aapki Public Key
+       })();
+    </script>
+
     <style>
-        body { background-color: #050505; color: #fff; }
-        .active-thumb { border-color: #ef4444; }
+        body { background-color: #050505; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .slider-scroll::-webkit-scrollbar { display: none; }
+        .product-card { transition: transform 0.2s; }
+        .product-card:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
+
     <div id="navbar"></div>
 
-    <main id="main-content" class="max-w-screen-xl mx-auto p-4 pt-8">
-        <div class="animate-pulse bg-gray-800 w-full h-96 rounded-2xl"></div>
-    </main>
+    <div class="relative w-full overflow-hidden mt-2" id="home-slider">
+        <div id="slider-track" class="flex transition-transform duration-500 ease-out h-[50vh] md:h-[600px]">
+            </div>
+        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2" id="slider-dots"></div>
+    </div>
+
+    <section id="products" class="max-w-screen-xl mx-auto p-4 mt-4 pb-20">
+        <div class="flex justify-between items-end mb-6">
+            <h2 class="text-3xl font-bold tracking-tight text-white">Latest Drones</h2>
+            <span id="result-count" class="text-xs text-gray-500 hidden">Showing all</span>
+        </div>
+        
+        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="animate-pulse bg-gray-800 h-64 rounded-xl"></div>
+            <div class="animate-pulse bg-gray-800 h-64 rounded-xl"></div>
+        </div>
+    </section>
 
     <script type="module">
-        import { db, auth, loadNavbar, doc, getDoc, setDoc, formatINR } from './firebase-config.js';
-        
+        import { db, loadNavbar, collection, getDocs, formatINR } from './firebase-config.js';
+
+        // 1. Load Navbar (Isme Login/Signup Modal hai)
         loadNavbar();
-        
-        const params = new URLSearchParams(window.location.search);
-        const pid = params.get('id');
-        const content = document.getElementById('main-content');
 
-        async function loadProduct() {
-            if(!pid) return;
-            const docSnap = await getDoc(doc(db, "products", pid));
-            
-            if (docSnap.exists()) {
-                const p = docSnap.data();
-                
-                // 🖼️ HANDLE MULTIPLE IMAGES
-                // Fallback: If 'images' array is missing, create one from the single 'image' field
-                const images = (p.images && p.images.length > 0) ? p.images : [p.image];
-                
-                let thumbnailsHTML = "";
-                images.forEach((img, index) => {
-                    thumbnailsHTML += `<img src="${img}" onclick="changeMainImage('${img}', this)" class="w-16 h-16 object-cover rounded border-2 border-transparent cursor-pointer hover:border-white transition ${index===0 ? 'active-thumb' : ''}">`;
-                });
+        let allProducts = [];
 
-                content.innerHTML = `
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="flex flex-col gap-4">
-                        <div class="bg-[#111] rounded-2xl p-4 flex items-center justify-center border border-gray-800 h-[400px]">
-                            <img id="main-img" src="${images[0]}" class="max-h-full max-w-full object-contain drop-shadow-2xl transition-all duration-300">
-                        </div>
-                        <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                            ${thumbnailsHTML}
-                        </div>
+        // 2. Load Slider
+        const sliderTrack = document.getElementById('slider-track');
+        getDocs(collection(db, "slider")).then(snap => {
+            if(snap.empty) {
+                sliderTrack.innerHTML = `<div class="w-full flex-shrink-0 bg-gray-800 flex items-center justify-center h-full"><h2>No Slides Configured</h2></div>`;
+                return;
+            }
+            let slides = "";
+            snap.forEach(doc => {
+                const data = doc.data();
+                slides += `
+                <div class="w-full flex-shrink-0 relative cursor-pointer bg-black" onclick="window.location.href='${data.link || '#'}'">
+                    <img src="${data.image}" class="w-full h-full object-contain">
+                    <div class="absolute bottom-0 bg-gradient-to-t from-black via-black/50 to-transparent w-full p-8 pointer-events-none">
+                        <h2 class="text-2xl font-bold text-white drop-shadow-lg">${data.title || ''}</h2>
                     </div>
+                </div>`;
+            });
+            sliderTrack.innerHTML = slides;
+            
+            let index = 0;
+            const total = snap.size;
+            if(total > 1) {
+                setInterval(() => {
+                    index = (index + 1) % total;
+                    sliderTrack.style.transform = `translateX(-${index * 100}%)`;
+                }, 4000);
+            }
+        });
 
-                    <div class="flex flex-col justify-center">
-                        <h1 class="text-4xl font-bold tracking-tighter mb-2">${p.name}</h1>
-                        <p class="text-3xl text-red-500 font-medium mb-6">${formatINR(p.price)}</p>
-                        
-                        <div class="bg-[#111] p-4 rounded-xl border border-gray-800 mb-6">
-                            <h3 class="text-gray-400 text-sm uppercase tracking-wide mb-2">Description</h3>
-                            <p class="text-gray-200 leading-relaxed">${p.desc}</p>
-                        </div>
+        // 3. Load Products & Initialize Search Logic
+        const grid = document.getElementById('product-grid');
+        const resultCount = document.getElementById('result-count');
 
-                         <div class="bg-[#111] p-4 rounded-xl border border-gray-800 mb-6">
-                            <h3 class="text-gray-400 text-sm uppercase tracking-wide mb-2">Specs</h3>
-                            <p class="text-gray-300 font-mono text-sm whitespace-pre-line">${p.specs || 'Standard Config'}</p>
-                        </div>
+        async function initProducts() {
+            const snap = await getDocs(collection(db, "products"));
+            
+            if(snap.empty) { 
+                grid.innerHTML = "<p class='col-span-full text-center text-gray-500'>No products found.</p>"; 
+                return; 
+            }
+            
+            allProducts = [];
+            snap.forEach(doc => {
+                allProducts.push({ id: doc.id, ...doc.data() });
+            });
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <button id="add-to-cart" class="py-4 rounded-xl border border-white font-bold hover:bg-white hover:text-black transition">ADD TO CART</button>
-                            <button id="buy-now" class="py-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition shadow-lg shadow-red-900/20">BUY NOW</button>
+            renderProducts(allProducts);
+        }
+
+        function renderProducts(productList) {
+            grid.innerHTML = "";
+            
+            if(productList.length === 0) {
+                grid.innerHTML = `
+                <div class="col-span-full text-center py-10">
+                    <p class="text-gray-500">No products match your search.</p>
+                </div>`;
+                return;
+            }
+
+            productList.forEach(p => {
+                const priceVal = p.price ? Number(p.price) : 0;
+                const displayImage = (p.images && p.images.length > 0) ? p.images[0] : p.image;
+
+                grid.innerHTML += `
+                <div class="product-card bg-[#111] border border-gray-800 rounded-xl overflow-hidden cursor-pointer group hover:border-gray-600 transition" onclick="window.location.href='product.html?id=${p.id}'">
+                    <div class="h-40 w-full bg-gray-900 overflow-hidden relative">
+                         <img src="${displayImage}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="p-3">
+                        <h3 class="text-white font-semibold text-lg truncate">${p.name}</h3>
+                        <p class="text-gray-400 text-xs mt-1 truncate line-clamp-2">${p.desc}</p>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-kd-red font-bold text-lg">${formatINR(priceVal)}</span>
+                            <button class="bg-white text-black text-xs px-3 py-1 rounded-full font-bold hover:bg-gray-200">BUY</button>
                         </div>
                     </div>
                 </div>`;
-
-                // Global function for gallery switching
-                window.changeMainImage = (src, el) => {
-                    document.getElementById('main-img').src = src;
-                    document.querySelectorAll('.active-thumb').forEach(t => t.classList.remove('active-thumb'));
-                    el.classList.add('active-thumb');
-                };
-
-                // Add to Cart
-                document.getElementById('add-to-cart').onclick = async () => {
-                    const user = auth.currentUser;
-                    if(user) {
-                        await setDoc(doc(db, "carts", user.uid, "items", pid), {
-                            name: p.name,
-                            price: p.price,
-                            image: images[0], // Use first image for cart thumbnail
-                            qty: 1
-                        });
-                        alert("Added to Cart");
-                        window.location.href = "index.html";
-                    } else {
-                        alert("Please login to shop");
-                        document.getElementById('auth-modal').classList.remove('hidden');
-                    }
-                };
-                
-                // Buy Now (Simplified: Add to cart -> Go to cart)
-                document.getElementById('buy-now').onclick = async () => {
-                     const user = auth.currentUser;
-                     if(user) {
-                        await setDoc(doc(db, "carts", user.uid, "items", pid), {
-                            name: p.name,
-                            price: p.price,
-                            image: images[0],
-                            qty: 1
-                        });
-                        window.location.href = "cart.html";
-                     } else {
-                        alert("Please login to buy");
-                        document.getElementById('auth-modal').classList.remove('hidden');
-                     }
-                };
-            }
+            });
         }
-        loadProduct();
+
+        // 4. Safe Search Listener
+        setTimeout(() => {
+            const searchInput = document.getElementById('search-input');
+            if(searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase().trim();
+                    const filtered = allProducts.filter(p => {
+                        const pName = p.name ? p.name.toLowerCase() : "";
+                        const pDesc = p.desc ? p.desc.toLowerCase() : "";
+                        return pName.includes(term) || pDesc.includes(term);
+                    });
+                    renderProducts(filtered);
+                    if(term.length > 0) {
+                        resultCount.classList.remove('hidden');
+                        resultCount.innerText = `Found ${filtered.length} result(s)`;
+                    } else {
+                        resultCount.classList.add('hidden');
+                    }
+                });
+            }
+        }, 100);
+
+        initProducts();
     </script>
 </body>
 </html>
