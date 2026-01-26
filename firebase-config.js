@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 // 🔴 CONFIGURATION
@@ -19,13 +19,14 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Initialize EmailJS safely
+auth.useDeviceLanguage(); // Auto-detect language
+
+// Initialize EmailJS (Order receipts ke liye future mein kaam aayega)
 (function() {
     if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm");
 })();
 
-// 🔴 EXPORTING EVERYTHING (Product page crash fix)
-export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, ref, uploadBytes, getDownloadURL };
+export { db, auth, storage, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp, signOut, onAuthStateChanged, ref, uploadBytes, getDownloadURL };
 
 export const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
@@ -38,7 +39,7 @@ window.toggleSearch = () => {
     else { overlay.classList.add('hidden'); input.value = ""; }
 };
 
-// --- NAVBAR LOGIC ---
+// --- NAVBAR LOGIC (PHONE AUTH + OPTIONAL EMAIL) ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     if(!nav) return;
@@ -70,25 +71,28 @@ export function loadNavbar() {
 
         <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-4">
             <div class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-sm relative shadow-2xl">
-                <button onclick="document.getElementById('auth-modal').classList.add('hidden'); resetAuthUI();" class="absolute top-2 right-4 text-gray-500 text-2xl hover:text-white">&times;</button>
+                <button onclick="document.getElementById('auth-modal').classList.add('hidden');" class="absolute top-2 right-4 text-gray-500 text-2xl hover:text-white">&times;</button>
                 <h2 class="text-xl font-bold mb-4 text-white text-center" id="auth-title">Login / Signup</h2>
                 
                 <div id="auth-step-1">
-                    <input type="email" id="auth-email" placeholder="Email Address" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-3 focus:border-red-600 outline-none">
-                    <input type="password" id="auth-pass" placeholder="Password" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 focus:border-red-600 outline-none">
-                    <div class="flex gap-2 flex-col">
-                        <button id="btn-login" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200">LOGIN</button>
-                        <div class="flex items-center justify-between text-gray-500 text-xs my-1"><span>OR</span></div>
-                        <button id="btn-init-signup" class="w-full border border-gray-600 text-white font-bold py-3 rounded hover:border-white transition">VERIFY & SIGNUP</button>
+                    <div class="flex gap-2 mb-3">
+                        <span class="bg-gray-800 text-white p-3 rounded border border-gray-700 font-bold">+91</span>
+                        <input type="number" id="phone-number" placeholder="Mobile Number" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-green-500 outline-none font-bold tracking-wider">
                     </div>
+                    
+                    <input type="email" id="optional-email" placeholder="Email Address (Optional)" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 focus:border-blue-500 outline-none text-sm">
+                    
+                    <div id="recaptcha-container" class="mb-4 flex justify-center"></div>
+                    <button id="btn-get-otp" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200 transition">GET OTP ON SMS</button>
                 </div>
 
                 <div id="auth-step-2" class="hidden text-center">
-                    <p class="text-gray-400 text-sm mb-4">OTP sent to <span id="otp-sent-email" class="text-white font-bold"></span></p>
-                    <input type="number" id="auth-otp-input" placeholder="Enter OTP" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 text-center text-xl tracking-widest font-bold focus:border-green-500 outline-none">
-                    <button id="btn-verify-otp" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">CONFIRM & CREATE</button>
-                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 underline">Cancel</button>
+                    <p class="text-gray-400 text-sm mb-4">OTP sent via SMS to <span id="otp-sent-number" class="text-white font-bold"></span></p>
+                    <input type="number" id="otp-input" placeholder="XXXXXX" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 text-center text-xl tracking-[10px] font-bold focus:border-green-500 outline-none">
+                    <button id="btn-verify-otp" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">VERIFY & LOGIN</button>
+                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 underline">Change Number</button>
                 </div>
+                
                 <p id="auth-msg" class="text-center text-xs mt-3 text-yellow-500 animate-pulse hidden">Processing...</p>
             </div>
         </div>
@@ -97,74 +101,105 @@ export function loadNavbar() {
     // Logo Logic
     getDoc(doc(db, "settings", "general")).then(snap => { if(snap.exists() && snap.data().logo) document.getElementById('nav-logo').src = snap.data().logo; });
 
-    // Auth Variables
-    let generatedCustomerOTP = null;
-    let tempEmail = "", tempPass = "";
+    // --- PHONE AUTH LOGIC ---
+    window.recaptchaVerifier = null;
+    window.confirmationResult = null;
+    let tempUserEmail = ""; // To store optional email
 
     window.resetAuthUI = () => {
         document.getElementById('auth-step-1').classList.remove('hidden');
         document.getElementById('auth-step-2').classList.add('hidden');
         document.getElementById('auth-title').innerText = "Login / Signup";
-        document.getElementById('auth-otp-input').value = "";
+        document.getElementById('otp-input').value = "";
+        document.getElementById('auth-msg').classList.add('hidden');
     };
 
     setTimeout(() => {
-        const btnLogin = document.getElementById('btn-login');
-        const btnInitSignup = document.getElementById('btn-init-signup');
+        if(!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                'size': 'normal',
+                'callback': (response) => { /* Captcha Solved */ },
+                'expired-callback': () => { /* Expired */ }
+            });
+            window.recaptchaVerifier.render();
+        }
+
+        const btnGetOtp = document.getElementById('btn-get-otp');
         const btnVerifyOtp = document.getElementById('btn-verify-otp');
         const authMsg = document.getElementById('auth-msg');
 
-        if(btnLogin) btnLogin.addEventListener('click', async () => {
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-pass').value;
-            authMsg.innerText = "Logging in..."; authMsg.classList.remove('hidden');
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                window.location.reload();
-            } catch(e) { authMsg.innerText = "Error: " + e.message; authMsg.classList.add('text-red-500'); }
-        });
+        // 1. Send OTP (SMS)
+        if(btnGetOtp) btnGetOtp.addEventListener('click', () => {
+            const phoneVal = document.getElementById('phone-number').value;
+            tempUserEmail = document.getElementById('optional-email').value.trim(); // Capture Email
 
-        if(btnInitSignup) btnInitSignup.addEventListener('click', () => {
-            tempEmail = document.getElementById('auth-email').value.trim();
-            tempPass = document.getElementById('auth-pass').value;
-            if(!tempEmail || tempPass.length < 6) return alert("Valid email & password (min 6 chars) required.");
-
-            generatedCustomerOTP = Math.floor(100000 + Math.random() * 900000);
-            authMsg.innerText = "Sending OTP..."; authMsg.classList.remove('hidden');
-            btnInitSignup.disabled = true;
-
-            const templateParams = { user_email: tempEmail, otp_code: generatedCustomerOTP };
-            emailjs.send("service_3vbmeu4", "template_i1g09mi", templateParams)
-                .then(() => {
-                    authMsg.classList.add('hidden');
+            if(phoneVal.length !== 10) { alert("Please enter valid 10-digit number"); return; }
+            
+            const phoneNumber = "+91" + phoneVal;
+            authMsg.innerText = "Sending SMS OTP..."; authMsg.classList.remove('hidden');
+            
+            signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
+                .then((confirmationResult) => {
+                    window.confirmationResult = confirmationResult;
                     document.getElementById('auth-step-1').classList.add('hidden');
                     document.getElementById('auth-step-2').classList.remove('hidden');
-                    document.getElementById('otp-sent-email').innerText = tempEmail;
-                    document.getElementById('auth-title').innerText = "Verify Email";
-                    btnInitSignup.disabled = false;
-                }, (err) => {
-                    alert("OTP Failed. Check console.");
-                    console.error(err);
-                    btnInitSignup.disabled = false;
+                    document.getElementById('otp-sent-number').innerText = phoneNumber;
                     authMsg.classList.add('hidden');
+                }).catch((error) => {
+                    authMsg.innerText = "Error: " + error.message;
+                    console.error(error);
+                    if(window.recaptchaVerifier) window.recaptchaVerifier.clear();
                 });
         });
 
-        if(btnVerifyOtp) btnVerifyOtp.addEventListener('click', async () => {
-            if(parseInt(document.getElementById('auth-otp-input').value) === generatedCustomerOTP) {
-                authMsg.innerText = "Creating Account..."; authMsg.classList.remove('hidden');
-                try {
-                    const uc = await createUserWithEmailAndPassword(auth, tempEmail, tempPass);
-                    await setDoc(doc(db, "users", uc.user.uid), { email: tempEmail, role: "customer", createdAt: serverTimestamp() });
-                    alert("✅ Account Created!"); window.location.reload();
-                } catch(e) { alert(e.message); authMsg.classList.add('hidden'); }
-            } else { alert("❌ Wrong OTP"); }
-        });
-    }, 500);
+        // 2. Verify OTP & Save Email (if provided)
+        if(btnVerifyOtp) btnVerifyOtp.addEventListener('click', () => {
+            const code = document.getElementById('otp-input').value;
+            if(code.length < 6) return;
 
+            authMsg.innerText = "Verifying..."; authMsg.classList.remove('hidden');
+
+            window.confirmationResult.confirm(code).then(async (result) => {
+                const user = result.user;
+                const userRef = doc(db, "users", user.uid);
+                
+                // Prepare Data
+                let userData = { 
+                    phone: user.phoneNumber, 
+                    role: "customer",
+                    lastLogin: serverTimestamp()
+                };
+
+                // Agar Email dala tha, toh use bhi save karo
+                if(tempUserEmail && tempUserEmail.length > 5) {
+                    userData.email = tempUserEmail;
+                }
+
+                // Check and Update Database
+                const userSnap = await getDoc(userRef);
+                if(!userSnap.exists()) {
+                    // New User: Create Profile with Phone + Optional Email
+                    userData.createdAt = serverTimestamp();
+                    await setDoc(userRef, userData);
+                } else {
+                    // Old User: Update Email if provided
+                    if(tempUserEmail) {
+                        await updateDoc(userRef, { email: tempUserEmail, lastLogin: serverTimestamp() });
+                    }
+                }
+                
+                alert("✅ Login Successful!");
+                window.location.reload();
+            }).catch((error) => {
+                authMsg.innerText = "Wrong OTP";
+                alert("Invalid OTP");
+            });
+        });
+
+    }, 1000);
+
+    // Menu Logic
     const menuList = document.getElementById('menu-list');
-    
-    // ✅ Updated Common Links with Categories
     const commonLinks = `
         <li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Home</span></a></li>
         <li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Categories</span></a></li>
@@ -172,16 +207,16 @@ export function loadNavbar() {
 
     onAuthStateChanged(auth, (user) => {
         if(user) {
-            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>My Orders</span></a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Logout</span></button></li>`;
+            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>My Orders</span></a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Logout (${user.phoneNumber})</span></button></li>`;
             setTimeout(() => document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => window.location.reload())), 500);
         } else {
-            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Login / Signup</span></button></li>`;
+            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Login with Phone</span></button></li>`;
         }
     });
 
     document.getElementById('menu-toggle')?.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
     
-    // Cart Count Logic
+    // Cart Count
     onAuthStateChanged(auth, (user) => {
         if (user) onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
             const count = document.getElementById('cart-count');
