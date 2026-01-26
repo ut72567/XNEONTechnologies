@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 // 🔴 CONFIGURATION
@@ -19,9 +19,9 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-auth.useDeviceLanguage(); // Auto-detect language
+auth.useDeviceLanguage();
 
-// Initialize EmailJS (Order receipts ke liye future mein kaam aayega)
+// Initialize EmailJS
 (function() {
     if(window.emailjs) emailjs.init("7ps995woJ-0Gp79Nm");
 })();
@@ -39,7 +39,7 @@ window.toggleSearch = () => {
     else { overlay.classList.add('hidden'); input.value = ""; }
 };
 
-// --- NAVBAR LOGIC (PHONE AUTH + OPTIONAL EMAIL) ---
+// --- NAVBAR LOGIC (DUAL LOGIN OPTION) ---
 export function loadNavbar() {
     const nav = document.getElementById('navbar');
     if(!nav) return;
@@ -71,26 +71,53 @@ export function loadNavbar() {
 
         <div id="auth-modal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-4">
             <div class="bg-[#111] border border-gray-800 rounded-xl p-6 w-full max-w-sm relative shadow-2xl">
-                <button onclick="document.getElementById('auth-modal').classList.add('hidden');" class="absolute top-2 right-4 text-gray-500 text-2xl hover:text-white">&times;</button>
-                <h2 class="text-xl font-bold mb-4 text-white text-center" id="auth-title">Login / Signup</h2>
+                <button onclick="document.getElementById('auth-modal').classList.add('hidden'); resetAuthUI();" class="absolute top-2 right-4 text-gray-500 text-2xl hover:text-white">&times;</button>
+                <h2 class="text-xl font-bold mb-6 text-white text-center" id="auth-title">Welcome</h2>
                 
-                <div id="auth-step-1">
-                    <div class="flex gap-2 mb-3">
-                        <span class="bg-gray-800 text-white p-3 rounded border border-gray-700 font-bold">+91</span>
-                        <input type="number" id="phone-number" placeholder="Mobile Number" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-green-500 outline-none font-bold tracking-wider">
-                    </div>
-                    
-                    <input type="email" id="optional-email" placeholder="Email Address (Optional)" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 focus:border-blue-500 outline-none text-sm">
-                    
-                    <div id="recaptcha-container" class="mb-4 flex justify-center"></div>
-                    <button id="btn-get-otp" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200 transition">GET OTP ON SMS</button>
+                <div id="auth-selection" class="flex flex-col gap-3">
+                    <button id="btn-select-phone" class="w-full bg-green-600 text-white font-bold py-3 rounded flex items-center justify-center gap-2 hover:bg-green-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        Login via Phone
+                    </button>
+                    <button id="btn-select-email" class="w-full bg-gray-800 text-white font-bold py-3 rounded flex items-center justify-center gap-2 hover:bg-gray-700 transition border border-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Login via Email
+                    </button>
                 </div>
 
-                <div id="auth-step-2" class="hidden text-center">
-                    <p class="text-gray-400 text-sm mb-4">OTP sent via SMS to <span id="otp-sent-number" class="text-white font-bold"></span></p>
-                    <input type="number" id="otp-input" placeholder="XXXXXX" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 text-center text-xl tracking-[10px] font-bold focus:border-green-500 outline-none">
-                    <button id="btn-verify-otp" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">VERIFY & LOGIN</button>
-                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 underline">Change Number</button>
+                <div id="auth-phone-section" class="hidden">
+                    <div id="auth-phone-step-1">
+                        <div class="flex gap-2 mb-4">
+                            <span class="bg-gray-800 text-white p-3 rounded border border-gray-700 font-bold">+91</span>
+                            <input type="number" id="phone-number" placeholder="Mobile Number" class="w-full bg-black border border-gray-700 text-white p-3 rounded focus:border-green-500 outline-none font-bold tracking-wider">
+                        </div>
+                        <div id="recaptcha-container" class="mb-4 flex justify-center"></div>
+                        <button id="btn-get-otp" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200 transition">GET OTP</button>
+                    </div>
+
+                    <div id="auth-phone-step-2" class="hidden text-center">
+                        <p class="text-gray-400 text-sm mb-4">OTP sent to <span id="otp-sent-number" class="text-white font-bold"></span></p>
+                        <input type="number" id="otp-input" placeholder="XXXXXX" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 text-center text-xl tracking-[10px] font-bold focus:border-green-500 outline-none">
+                        <button id="btn-verify-otp" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700">VERIFY & LOGIN</button>
+                    </div>
+                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 w-full text-center underline">Back to Options</button>
+                </div>
+
+                <div id="auth-email-section" class="hidden">
+                    <div id="email-login-form">
+                        <input type="email" id="email-in" placeholder="Email Address" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-3 focus:border-blue-600 outline-none">
+                        <input type="password" id="pass-in" placeholder="Password" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 focus:border-blue-600 outline-none">
+                        <button id="btn-email-login" class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 mb-3">LOGIN</button>
+                        <p class="text-center text-sm text-gray-400">New here? <button id="btn-show-signup" class="text-white underline font-bold">Create Account</button></p>
+                    </div>
+
+                    <div id="email-signup-form" class="hidden">
+                        <input type="email" id="signup-email" placeholder="Email Address" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-3 focus:border-green-600 outline-none">
+                        <input type="password" id="signup-pass" placeholder="Password (Min 6 chars)" class="w-full bg-black border border-gray-700 text-white p-3 rounded mb-4 focus:border-green-600 outline-none">
+                        <button id="btn-email-signup" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700 mb-3">SIGN UP</button>
+                        <p class="text-center text-sm text-gray-400">Already have account? <button id="btn-show-login" class="text-white underline font-bold">Login</button></p>
+                    </div>
+                    <button onclick="resetAuthUI()" class="mt-4 text-xs text-gray-500 w-full text-center underline">Back to Options</button>
                 </div>
                 
                 <p id="auth-msg" class="text-center text-xs mt-3 text-yellow-500 animate-pulse hidden">Processing...</p>
@@ -98,107 +125,116 @@ export function loadNavbar() {
         </div>
     `;
 
-    // Logo Logic
     getDoc(doc(db, "settings", "general")).then(snap => { if(snap.exists() && snap.data().logo) document.getElementById('nav-logo').src = snap.data().logo; });
 
-    // --- PHONE AUTH LOGIC ---
+    // --- LOGIC START ---
     window.recaptchaVerifier = null;
     window.confirmationResult = null;
-    let tempUserEmail = ""; // To store optional email
 
+    // Reset sab kuch pehle jaisa (Selection Screen)
     window.resetAuthUI = () => {
-        document.getElementById('auth-step-1').classList.remove('hidden');
-        document.getElementById('auth-step-2').classList.add('hidden');
-        document.getElementById('auth-title').innerText = "Login / Signup";
-        document.getElementById('otp-input').value = "";
+        document.getElementById('auth-selection').classList.remove('hidden');
+        document.getElementById('auth-phone-section').classList.add('hidden');
+        document.getElementById('auth-email-section').classList.add('hidden');
+        document.getElementById('auth-title').innerText = "Welcome";
         document.getElementById('auth-msg').classList.add('hidden');
+        
+        // Reset Phone forms
+        document.getElementById('auth-phone-step-1').classList.remove('hidden');
+        document.getElementById('auth-phone-step-2').classList.add('hidden');
+        document.getElementById('otp-input').value = "";
+        
+        // Reset Email forms
+        document.getElementById('email-login-form').classList.remove('hidden');
+        document.getElementById('email-signup-form').classList.add('hidden');
     };
 
     setTimeout(() => {
-        if(!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'normal',
-                'callback': (response) => { /* Captcha Solved */ },
-                'expired-callback': () => { /* Expired */ }
-            });
-            window.recaptchaVerifier.render();
-        }
-
-        const btnGetOtp = document.getElementById('btn-get-otp');
-        const btnVerifyOtp = document.getElementById('btn-verify-otp');
         const authMsg = document.getElementById('auth-msg');
 
-        // 1. Send OTP (SMS)
-        if(btnGetOtp) btnGetOtp.addEventListener('click', () => {
-            const phoneVal = document.getElementById('phone-number').value;
-            tempUserEmail = document.getElementById('optional-email').value.trim(); // Capture Email
+        // 1. Selection Buttons Logic
+        document.getElementById('btn-select-phone').addEventListener('click', () => {
+            document.getElementById('auth-selection').classList.add('hidden');
+            document.getElementById('auth-phone-section').classList.remove('hidden');
+            document.getElementById('auth-title').innerText = "Phone Login";
+            // Init Recaptcha
+            if(!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'normal' });
+                window.recaptchaVerifier.render();
+            }
+        });
 
-            if(phoneVal.length !== 10) { alert("Please enter valid 10-digit number"); return; }
-            
+        document.getElementById('btn-select-email').addEventListener('click', () => {
+            document.getElementById('auth-selection').classList.add('hidden');
+            document.getElementById('auth-email-section').classList.remove('hidden');
+            document.getElementById('auth-title').innerText = "Email Login";
+        });
+
+        // 2. PHONE AUTH Logic
+        document.getElementById('btn-get-otp').addEventListener('click', () => {
+            const phoneVal = document.getElementById('phone-number').value;
+            if(phoneVal.length !== 10) { alert("Invalid Number"); return; }
             const phoneNumber = "+91" + phoneVal;
-            authMsg.innerText = "Sending SMS OTP..."; authMsg.classList.remove('hidden');
-            
+            authMsg.innerText = "Sending OTP..."; authMsg.classList.remove('hidden');
+
             signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
                 .then((confirmationResult) => {
                     window.confirmationResult = confirmationResult;
-                    document.getElementById('auth-step-1').classList.add('hidden');
-                    document.getElementById('auth-step-2').classList.remove('hidden');
+                    document.getElementById('auth-phone-step-1').classList.add('hidden');
+                    document.getElementById('auth-phone-step-2').classList.remove('hidden');
                     document.getElementById('otp-sent-number').innerText = phoneNumber;
                     authMsg.classList.add('hidden');
-                }).catch((error) => {
-                    authMsg.innerText = "Error: " + error.message;
-                    console.error(error);
-                    if(window.recaptchaVerifier) window.recaptchaVerifier.clear();
-                });
+                }).catch((error) => { authMsg.innerText = "Error: " + error.message; });
         });
 
-        // 2. Verify OTP & Save Email (if provided)
-        if(btnVerifyOtp) btnVerifyOtp.addEventListener('click', () => {
+        document.getElementById('btn-verify-otp').addEventListener('click', () => {
             const code = document.getElementById('otp-input').value;
-            if(code.length < 6) return;
-
-            authMsg.innerText = "Verifying..."; authMsg.classList.remove('hidden');
-
             window.confirmationResult.confirm(code).then(async (result) => {
                 const user = result.user;
                 const userRef = doc(db, "users", user.uid);
-                
-                // Prepare Data
-                let userData = { 
-                    phone: user.phoneNumber, 
-                    role: "customer",
-                    lastLogin: serverTimestamp()
-                };
-
-                // Agar Email dala tha, toh use bhi save karo
-                if(tempUserEmail && tempUserEmail.length > 5) {
-                    userData.email = tempUserEmail;
-                }
-
-                // Check and Update Database
                 const userSnap = await getDoc(userRef);
-                if(!userSnap.exists()) {
-                    // New User: Create Profile with Phone + Optional Email
-                    userData.createdAt = serverTimestamp();
-                    await setDoc(userRef, userData);
-                } else {
-                    // Old User: Update Email if provided
-                    if(tempUserEmail) {
-                        await updateDoc(userRef, { email: tempUserEmail, lastLogin: serverTimestamp() });
-                    }
-                }
-                
-                alert("✅ Login Successful!");
+                if(!userSnap.exists()) await setDoc(userRef, { phone: user.phoneNumber, role: "customer", createdAt: serverTimestamp() });
+                alert("✅ Login Successful!"); window.location.reload();
+            }).catch(() => { alert("Invalid OTP"); });
+        });
+
+        // 3. EMAIL AUTH Logic
+        document.getElementById('btn-show-signup').addEventListener('click', () => {
+            document.getElementById('email-login-form').classList.add('hidden');
+            document.getElementById('email-signup-form').classList.remove('hidden');
+            document.getElementById('auth-title').innerText = "Create Account";
+        });
+
+        document.getElementById('btn-show-login').addEventListener('click', () => {
+            document.getElementById('email-signup-form').classList.add('hidden');
+            document.getElementById('email-login-form').classList.remove('hidden');
+            document.getElementById('auth-title').innerText = "Email Login";
+        });
+
+        document.getElementById('btn-email-login').addEventListener('click', async () => {
+            const email = document.getElementById('email-in').value;
+            const pass = document.getElementById('pass-in').value;
+            authMsg.innerText = "Logging in..."; authMsg.classList.remove('hidden');
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
                 window.location.reload();
-            }).catch((error) => {
-                authMsg.innerText = "Wrong OTP";
-                alert("Invalid OTP");
-            });
+            } catch(e) { authMsg.innerText = "Error: " + e.message; }
+        });
+
+        document.getElementById('btn-email-signup').addEventListener('click', async () => {
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-pass').value;
+            if(pass.length < 6) return alert("Password too short (min 6 chars)");
+            authMsg.innerText = "Creating Account..."; authMsg.classList.remove('hidden');
+            try {
+                const uc = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", uc.user.uid), { email: email, role: "customer", createdAt: serverTimestamp() });
+                alert("✅ Account Created!"); window.location.reload();
+            } catch(e) { authMsg.innerText = "Error: " + e.message; }
         });
 
     }, 1000);
 
-    // Menu Logic
     const menuList = document.getElementById('menu-list');
     const commonLinks = `
         <li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Home</span></a></li>
@@ -206,17 +242,17 @@ export function loadNavbar() {
     `;
 
     onAuthStateChanged(auth, (user) => {
+        let identifier = user?.phoneNumber || user?.email || "User";
         if(user) {
-            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>My Orders</span></a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Logout (${user.phoneNumber})</span></button></li>`;
+            menuList.innerHTML = `${commonLinks}<li><a href="orders.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>My Orders</span></a></li><li><button id="logout-btn" class="w-full text-left py-4 px-6 text-red-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Logout (${identifier})</span></button></li>`;
             setTimeout(() => document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => window.location.reload())), 500);
         } else {
-            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Login with Phone</span></button></li>`;
+            menuList.innerHTML = `${commonLinks}<li><button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="w-full text-left py-4 px-6 text-green-500 hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Login / Signup</span></button></li>`;
         }
     });
 
     document.getElementById('menu-toggle')?.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
     
-    // Cart Count
     onAuthStateChanged(auth, (user) => {
         if (user) onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
             const count = document.getElementById('cart-count');
