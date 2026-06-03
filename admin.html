@@ -20,7 +20,7 @@
         .input-dark { background: #000 !important; border: 1px solid #222 !important; color: white; transition: 0.3s; }
         .input-dark:focus { border-color: #3b82f6 !important; outline: none; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
         .tab-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-
+        
         /* Custom Scrollbar for a cleaner look */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #050505; }
@@ -33,7 +33,7 @@
     <div id="auth-layer" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="glass-panel p-8 rounded-3xl w-full max-w-sm text-center shadow-[0_0_40px_rgba(59,130,246,0.15)] relative overflow-hidden">
             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,1)]"></div>
-
+            
             <h2 class="text-3xl font-black text-white mb-2 tracking-wider">XNEON<span class="text-blue-500">.</span></h2>
             <p class="text-gray-400 text-sm mb-8 font-medium">Secure Admin Portal</p>
 
@@ -88,7 +88,7 @@
                 <select id="p-category" class="w-full input-dark p-3 mb-4 rounded-xl"><option value="General">General</option></select>
                 <textarea id="p-desc" class="w-full input-dark p-3 mb-4 rounded-xl h-24" placeholder="Product Description"></textarea>
                 <textarea id="p-specs" class="w-full input-dark p-3 mb-4 rounded-xl h-24" placeholder="Technical Specifications"></textarea>
-
+                
                 <div class="mb-4 bg-black/40 p-4 border border-[#222] rounded-xl">
                     <label class="text-sm text-gray-400 mb-3 block font-bold uppercase">Image URLs</label>
                     <div id="image-inputs-container" class="space-y-3">
@@ -98,7 +98,7 @@
                 </div>
                 <button onclick="saveProduct()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-4 rounded-xl transition-all">PUBLISH PRODUCT</button>
             </div>
-
+            
             <h3 class="text-xl font-bold mb-4">Inventory</h3>
             <div id="product-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">Loading...</div>
         </div>
@@ -215,7 +215,7 @@
             tabs.forEach(t => {
                 // Handle Content
                 document.getElementById('tab-' + t).style.display = (t === tabName) ? 'block' : 'none';
-
+                
                 // Handle Button Styling
                 const btn = document.getElementById('btn-' + t);
                 if (t === tabName) {
@@ -237,15 +237,15 @@
             onSnapshot(q, (snap) => { 
                 const list = document.getElementById('admin-orders-list'); 
                 list.innerHTML = ""; 
-
+                
                 if(snap.empty) { 
                     list.innerHTML = "<div class='glass-panel p-10 text-center rounded-2xl text-gray-500'>No active orders found in the system.</div>"; 
                     return; 
                 } 
-
+                
                 snap.forEach(d => { 
                     const o = d.data(); 
-
+                    
                     // Determine Status Color
                     let statusColor = "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"; // Default Pending
                     if(o.status === 'Confirmed') statusColor = "bg-green-500/20 text-green-400 border border-green-500/30";
@@ -311,67 +311,32 @@
                 }); 
             }); 
         }
-
+        
         window.updateStatus = async (id, status) => { await updateDoc(doc(db, "orders", id), { status: status }); };
-
+        
         let currentOrderId = null;
         window.openShipModal = (id) => { 
             currentOrderId = id; 
             document.getElementById('ship-modal').classList.remove('hidden'); 
         };
-
-        // 1. Add this function to your existing <script> block
-async function sendEmailViaGoogle(to, subject, html) {
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjNLKVu1U5xXj9kd2C6fv0AyPT3KHZcwbNXGA-lFekbEz_YcGk0ltO-TVBkODBkCzF/exec";
-    
-    await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, html })
-    });
-}
-
-// 2. Update your existing confirm-ship-btn listener
-document.getElementById('confirm-ship-btn').addEventListener('click', async () => { 
-    const partner = document.getElementById('confirm-ship-btn').addEventListener('click', async () => { 
-    try {
-        const partner = document.getElementById('ship-partner').value; 
-        const track = document.getElementById('ship-track').value; 
         
-        if(!currentOrderId) throw new Error("Order ID is missing! Try reopening the modal.");
-        if(!partner || !track) throw new Error("Please enter both Partner and Tracking ID.");
-
-        const orderRef = doc(db, "orders", currentOrderId);
-        const orderSnapshot = await getDoc(orderRef);
-        const orderData = orderSnapshot.data();
-
-        // Update Order
-        await updateDoc(orderRef, { 
-            status: "Shipped", 
-            deliveryPartner: partner, 
-            trackingId: track 
-        }); 
-
-        // Trigger Email
-        if(orderData.email) {
-            await sendEmailViaGoogle(
-                orderData.email, 
-                "Your Order has Shipped!",
-                `<h1>Order Shipped</h1><p>Tracking: ${track}</p>`
-            );
-        }
-
-        document.getElementById('ship-modal').classList.add('hidden'); 
-        alert("Success!");
-        location.reload();
-
-    } catch (error) {
-        // THIS WILL POP UP ON YOUR PHONE SCREEN
-        alert("ERROR: " + error.message);
-    }
-});
-
+        document.getElementById('confirm-ship-btn').addEventListener('click', async () => { 
+            const partner = document.getElementById('ship-partner').value; 
+            const track = document.getElementById('ship-track').value; 
+            if(currentOrderId && partner && track) { 
+                await updateDoc(doc(db, "orders", currentOrderId), { 
+                    status: "Shipped", 
+                    deliveryPartner: partner, 
+                    trackingId: track 
+                }); 
+                document.getElementById('ship-modal').classList.add('hidden'); 
+                document.getElementById('ship-partner').value = "";
+                document.getElementById('ship-track').value = "";
+            } else {
+                alert("Please fill in both tracking details.");
+            }
+        });
+        
         window.cancelOrder = async (id) => { 
             if(confirm("Are you sure you want to cancel this order?")) {
                 await updateDoc(doc(db, "orders", id), { status: "Cancelled" }); 
@@ -382,17 +347,17 @@ document.getElementById('confirm-ship-btn').addEventListener('click', async () =
         window.addImgInput = () => { 
             document.getElementById('image-inputs-container').innerHTML += `<input class="w-full input-dark p-3 rounded-lg p-img-input mt-3" placeholder="Additional Image URL">`; 
         };
-
+        
         window.saveProduct = async () => { 
             const inputs = document.querySelectorAll('.p-img-input'); 
             const imgArray = []; 
             inputs.forEach(inp => { if(inp.value.trim() !== "") imgArray.push(inp.value.trim()); }); 
-
+            
             if(imgArray.length === 0) return alert("Please add at least one image URL."); 
-
+            
             const btn = event.target;
             btn.innerText = "SAVING...";
-
+            
             await addDoc(collection(db, "products"), { 
                 name: document.getElementById('p-name').value, 
                 price: Number(document.getElementById('p-price').value), 
@@ -403,11 +368,11 @@ document.getElementById('confirm-ship-btn').addEventListener('click', async () =
                 image: imgArray[0], 
                 createdAt: new Date() 
             }); 
-
+            
             alert("Product Published Successfully!"); 
             location.reload(); 
         };
-
+        
         function loadProducts() { 
             onSnapshot(collection(db, "products"), (snap) => { 
                 const l = document.getElementById('product-list'); 
@@ -428,7 +393,7 @@ document.getElementById('confirm-ship-btn').addEventListener('click', async () =
                 }); 
             }); 
         }
-
+        
         window.deleteProduct = async(id) => { if(confirm("Permanently delete product?")) await deleteDoc(doc(db, "products", id)); };
 
         // Categories
@@ -441,7 +406,7 @@ document.getElementById('confirm-ship-btn').addEventListener('click', async () =
                 document.getElementById('c-image').value = "";
             }
         };
-
+        
         function loadCategories() { 
             onSnapshot(collection(db, "categories"), (snap) => { 
                 const l = document.getElementById('category-list'); 
@@ -473,7 +438,7 @@ document.getElementById('confirm-ship-btn').addEventListener('click', async () =
             document.getElementById('s-link').value = "";
             document.getElementById('s-title').value = "";
         };
-
+        
         function loadSlides() { 
             onSnapshot(collection(db, "slider"), (snap) => { 
                 const l = document.getElementById('slider-list'); 
