@@ -3,170 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login | XNEON Technologies</title>
+    <title>Admin Dashboard | XNEON Technologies</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
-            // 2️⃣ YOUR PUBLIC KEY
             emailjs.init("7ps995woJ-0Gp79Nm");
         })();
     </script>
 
-    <style>body { background-color: #000; color: #ccc; }</style>
+    <style>
+        body { background-color: #050505; color: #ffffff; font-family: 'Inter', sans-serif; }
+        .glass-panel { background: #0a0a0a; border: 1px solid #222; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
+        .glass-panel:hover { border-color: #333; }
+        .input-dark { background: #000 !important; border: 1px solid #222 !important; color: white; transition: 0.3s; }
+        .input-dark:focus { border-color: #3b82f6 !important; outline: none; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+        .tab-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        
+        /* Custom Scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-8">
 
-    <div id="auth-layer" class="fixed inset-0 bg-black z-[100] flex items-center justify-center p-4">
-        <div class="bg-[#111] p-8 rounded-2xl border border-gray-800 w-full max-w-sm text-center shadow-2xl">
-            <img src="https://via.placeholder.com/150x50?text=XNEON" class="h-12 mx-auto mb-6 opacity-80">
+    <div id="auth-layer" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-3xl w-full max-w-sm text-center shadow-[0_0_40px_rgba(59,130,246,0.15)] relative overflow-hidden">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,1)]"></div>
             
-            <h2 class="text-2xl font-bold text-white mb-2">Admin Verification</h2>
-            <p class="text-gray-500 text-sm mb-6">Enter registered email to receive OTP.</p>
+            <h2 class="text-3xl font-black text-white mb-2 tracking-wider">XNEON<span class="text-blue-500">.</span></h2>
+            <p class="text-gray-400 text-sm mb-8 font-medium">Secure Admin Portal</p>
 
             <div id="step-email">
-                <input type="email" id="admin-email-input" class="w-full bg-black border border-gray-700 text-white p-3 rounded-lg mb-4 text-center focus:border-red-600 outline-none transition" placeholder="Enter Email">
-                <button onclick="sendOTP()" id="send-btn" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition">SEND OTP</button>
+                <input type="email" id="admin-email-input" class="w-full input-dark p-4 rounded-xl mb-4 text-center placeholder-gray-600 font-medium" placeholder="Admin Email Address">
+                <button onclick="sendOTP()" id="send-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-[1.02]">AUTHORIZE</button>
             </div>
 
             <div id="step-otp" class="hidden">
-                <input type="number" id="otp-input" class="w-full bg-black border border-gray-700 text-white p-3 rounded-lg mb-4 text-center tracking-[10px] text-xl font-bold focus:border-green-500 outline-none transition" placeholder="••••••">
-                <button onclick="verifyOTP()" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition">VERIFY & LOGIN</button>
-                <button onclick="location.reload()" class="mt-4 text-xs text-gray-500 underline">Resend / Change Email</button>
+                <input type="number" id="otp-input" class="w-full input-dark p-4 rounded-xl mb-4 text-center tracking-[15px] text-2xl font-bold placeholder-gray-700" placeholder="••••••">
+                <button onclick="verifyOTP()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl transition-all">VERIFY LOGIN</button>
+                <button onclick="location.reload()" class="mt-6 text-sm text-gray-500 hover:text-white transition-colors">← Back to Email</button>
             </div>
-            
-            <p id="status-msg" class="mt-4 text-xs text-yellow-500 animate-pulse hidden">Sending OTP...</p>
+
+            <p id="status-msg" class="mt-6 text-sm font-medium text-blue-400 animate-pulse hidden">Processing Request...</p>
         </div>
     </div>
 
-    <div id="dashboard" class="max-w-4xl mx-auto hidden">
-        <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-            <h1 class="text-3xl text-white font-bold">Admin Panel</h1>
-            <div class="flex gap-4">
-                <button onclick="logout()" class="text-red-500 font-bold text-sm">LOGOUT</button>
-                <button onclick="window.location.href='index.html'" class="text-blue-500 text-sm">VIEW SITE</button>
+    <div id="dashboard" class="max-w-6xl mx-auto hidden pb-20">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 glass-panel p-6 rounded-2xl">
+            <div>
+                <h1 class="text-2xl font-black tracking-wider"><span class="text-blue-500">XNEON</span> COMMAND</h1>
+                <p class="text-gray-400 text-sm">System Management Dashboard</p>
+            </div>
+            <div class="flex gap-4 mt-4 md:mt-0">
+                <button onclick="window.location.href='index.html'" class="px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 hover:border-gray-500 text-sm font-bold text-gray-300 transition-colors">VIEW SITE</button>
+                <button onclick="logout()" class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500 text-sm font-bold text-red-500 hover:text-white transition-colors">LOGOUT</button>
             </div>
         </div>
 
-        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <button onclick="showTab('orders')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">📦 Orders</button>
-            <button onclick="showTab('products')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">🚁 Products</button>
-            <button onclick="showTab('categories')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">📂 Categories</button>
-            <button onclick="showTab('slider')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">🖼️ Slider</button>
-            <button onclick="showTab('settings')" class="px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700 whitespace-nowrap">⚙️ Settings</button>
+        <div class="flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-gray-800 scrollbar-hide">
+            <button onclick="showTab('orders')" id="btn-orders" class="tab-btn active px-6 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-400 font-medium hover:text-white transition-all whitespace-nowrap"><i class="fas fa-box"></i> Orders</button>
+            <button onclick="showTab('products')" id="btn-products" class="tab-btn px-6 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-400 font-medium hover:text-white transition-all whitespace-nowrap"><i class="fas fa-drone"></i> Products</button>
+            <button onclick="showTab('categories')" id="btn-categories" class="tab-btn px-6 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-400 font-medium hover:text-white transition-all whitespace-nowrap"><i class="fas fa-folder"></i> Categories</button>
+            <button onclick="showTab('slider')" id="btn-slider" class="tab-btn px-6 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-400 font-medium hover:text-white transition-all whitespace-nowrap"><i class="fas fa-image"></i> Slider</button>
+            <button onclick="showTab('settings')" id="btn-settings" class="tab-btn px-6 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-400 font-medium hover:text-white transition-all whitespace-nowrap"><i class="fas fa-cog"></i> Settings</button>
         </div>
 
-        <div id="tab-orders" class="block"><h2 class="text-2xl font-bold text-white mb-4">Manage Orders</h2><div id="admin-orders-list" class="space-y-4">Loading...</div></div>
-        
-        <div id="tab-products" class="hidden">
-            <div class="mb-8 bg-[#111] p-4 rounded border border-gray-800">
-                <h3 class="text-white font-bold mb-4">Add New Product</h3>
-                <input id="p-name" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Product Name">
-                <input id="p-price" type="number" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Price (₹)">
-                <select id="p-category" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded text-white"><option value="General">General</option></select>
-                <textarea id="p-desc" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Description"></textarea>
-                <textarea id="p-specs" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Specifications"></textarea>
-                <div class="mb-2 p-2 border border-gray-800 rounded">
-                    <label class="text-xs text-gray-500 mb-2 block">Images (URLs)</label>
-                    <div id="image-inputs-container" class="space-y-2"><input class="w-full bg-black border border-gray-700 p-2 rounded p-img-input" placeholder="Main Image URL"></div>
-                    <button onclick="addImgInput()" class="text-xs text-blue-500 mt-2 font-bold">+ Add Image URL</button>
+        <div id="tab-orders" class="block">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span class="w-2 h-6 bg-blue-500 rounded-full block"></span> Order Management</h2>
+            <div id="admin-orders-list" class="space-y-6">
                 </div>
-                <button onclick="saveProduct()" class="w-full bg-green-600 text-white font-bold p-3 rounded mt-2">SAVE PRODUCT</button>
+        </div>
+
+        <div id="tab-products" class="hidden">
+            <div class="glass-panel p-6 rounded-2xl mb-8 border-l-4 border-l-blue-500">
+                <h3 class="text-xl font-bold mb-6">Add New Product</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input id="p-name" class="w-full input-dark p-3 rounded-xl" placeholder="Product Name">
+                    <input id="p-price" type="number" class="w-full input-dark p-3 rounded-xl" placeholder="Price (₹)">
+                </div>
+                <select id="p-category" class="w-full input-dark p-3 mb-4 rounded-xl"><option value="General">General</option></select>
+                <textarea id="p-desc" class="w-full input-dark p-3 mb-4 rounded-xl h-24" placeholder="Product Description"></textarea>
+                <textarea id="p-specs" class="w-full input-dark p-3 mb-4 rounded-xl h-24" placeholder="Technical Specifications"></textarea>
+                
+                <div class="mb-4 bg-black/40 p-4 border border-[#222] rounded-xl">
+                    <label class="text-sm text-gray-400 mb-3 block font-bold uppercase">Image URLs</label>
+                    <div id="image-inputs-container" class="space-y-3">
+                        <input class="w-full input-dark p-3 rounded-lg p-img-input" placeholder="Main Image URL">
+                    </div>
+                    <button onclick="addImgInput()" class="text-blue-400 hover:text-blue-300 text-sm mt-3 font-bold">+ Add Another Image URL</button>
+                </div>
+                <button onclick="saveProduct()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-4 rounded-xl transition-all">PUBLISH PRODUCT</button>
             </div>
-            <h3 class="text-white font-bold mb-2">Existing Products</h3><div id="product-list" class="space-y-2">Loading...</div>
+            
+            <h3 class="text-xl font-bold mb-4">Inventory</h3>
+            <div id="product-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">Loading...</div>
         </div>
 
         <div id="tab-categories" class="hidden">
-            <div class="mb-8 bg-[#111] p-4 rounded border border-gray-800"><h3 class="text-white font-bold mb-4">Add Category</h3><input id="c-name" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Name"><input id="c-image" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Image URL"><button onclick="saveCategory()" class="w-full bg-purple-600 text-white font-bold p-3 rounded mt-2">SAVE</button></div>
-            <div id="category-list" class="grid grid-cols-2 gap-4">Loading...</div>
+            <div class="glass-panel p-6 rounded-2xl mb-8 border-l-4 border-l-purple-500">
+                <h3 class="text-xl font-bold mb-6">Create Category</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input id="c-name" class="w-full input-dark p-3 rounded-xl" placeholder="Category Name">
+                    <input id="c-image" class="w-full input-dark p-3 rounded-xl" placeholder="Cover Image URL">
+                </div>
+                <button onclick="saveCategory()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold p-4 rounded-xl transition-all">CREATE CATEGORY</button>
+            </div>
+            <div id="category-list" class="grid grid-cols-2 md:grid-cols-4 gap-4">Loading...</div>
         </div>
 
         <div id="tab-slider" class="hidden">
-            <div class="mb-8 bg-[#111] p-4 rounded border border-gray-800"><h3 class="text-white font-bold mb-4">Add Slide</h3><input id="s-image" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Image URL"><input id="s-link" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Link"><input id="s-title" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="Title"><button onclick="addSlide()" class="w-full bg-blue-600 text-white font-bold p-3 rounded">ADD</button></div>
-            <div id="slider-list" class="grid grid-cols-1 gap-4"></div>
+            <div class="glass-panel p-6 rounded-2xl mb-8 border-l-4 border-l-cyan-500">
+                <h3 class="text-xl font-bold mb-6">Add Hero Slide</h3>
+                <input id="s-title" class="w-full input-dark p-3 mb-4 rounded-xl" placeholder="Slide Title/Headline">
+                <input id="s-image" class="w-full input-dark p-3 mb-4 rounded-xl" placeholder="Background Image URL">
+                <input id="s-link" class="w-full input-dark p-3 mb-4 rounded-xl" placeholder="Button Link (e.g., /store)">
+                <button onclick="addSlide()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold p-4 rounded-xl transition-all">ADD TO SLIDER</button>
+            </div>
+            <div id="slider-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
 
         <div id="tab-settings" class="hidden">
-            <div class="bg-[#111] p-4 rounded border border-gray-800"><h3 class="text-white font-bold mb-4">Logo</h3><input id="logo-url" class="w-full bg-black border border-gray-700 p-2 mb-2 rounded" placeholder="URL"><button onclick="updateLogo()" class="bg-white text-black font-bold px-4 py-2 rounded">Update</button></div>
+            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-gray-500">
+                <h3 class="text-xl font-bold mb-6">Brand Settings</h3>
+                <label class="text-sm text-gray-400 mb-2 block font-bold">Logo URL</label>
+                <div class="flex gap-4">
+                    <input id="logo-url" class="w-full input-dark p-3 rounded-xl flex-1" placeholder="https://...">
+                    <button onclick="updateLogo()" class="bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">UPDATE</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="ship-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-[#111] p-6 rounded-xl border border-gray-800 w-full max-w-sm">
-            <h3 class="text-xl font-bold text-white mb-4">Ship Order</h3>
-            <input id="ship-partner" class="w-full bg-black border border-gray-700 p-2 mb-3 rounded text-white" placeholder="Partner">
-            <input id="ship-track" class="w-full bg-black border border-gray-700 p-2 mb-4 rounded text-white" placeholder="Tracking ID">
-            <button id="confirm-ship-btn" class="w-full bg-blue-600 text-white font-bold py-2 rounded">CONFIRM</button>
-            <button onclick="document.getElementById('ship-modal').classList.add('hidden')" class="w-full mt-2 text-gray-500 py-2">Cancel</button>
+    <div id="ship-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-3xl w-full max-w-sm">
+            <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-3">Ship Order</h3>
+            <label class="text-xs text-gray-400 mb-2 block font-bold uppercase">Delivery Partner</label>
+            <input id="ship-partner" class="w-full input-dark p-4 mb-4 rounded-xl" placeholder="e.g. BlueDart, Delhivery">
+            <label class="text-xs text-gray-400 mb-2 block font-bold uppercase">Tracking Number</label>
+            <input id="ship-track" class="w-full input-dark p-4 mb-6 rounded-xl" placeholder="AWB / Tracking ID">
+            <button id="confirm-ship-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all mb-3">CONFIRM SHIPMENT</button>
+            <button onclick="document.getElementById('ship-modal').classList.add('hidden')" class="w-full bg-transparent border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 font-bold py-4 rounded-xl transition-all">CANCEL</button>
         </div>
     </div>
 
     <script type="module">
         import { db, doc, updateDoc, addDoc, deleteDoc, setDoc, collection, query, orderBy, onSnapshot, formatINR } from './firebase-config.js';
 
-        // =========================================================
-        // 🔴 SECURITY SETTING - APNA ASLI EMAIL YAHAN LIKHO
-        // =========================================================
-        // Example: const AUTHORIZED_EMAIL = "tripathivlogs@gmail.com";
         const AUTHORIZED_EMAIL = "tripathivlogs39@gmail.com"; 
-        // =========================================================
 
         let generatedOTP = null;
 
-        // Make functions global for HTML onclicks
+        // --- AUTHENTICATION LOGIC ---
         window.sendOTP = function() {
-            let emailInput = document.getElementById('admin-email-input').value;
+            let emailInput = document.getElementById('admin-email-input').value.trim().toLowerCase();
+            const validEmail = AUTHORIZED_EMAIL.trim().toLowerCase();
             const status = document.getElementById('status-msg');
             const btn = document.getElementById('send-btn');
 
-            // Clean input
-            emailInput = emailInput.trim().toLowerCase();
-            const validEmail = AUTHORIZED_EMAIL.trim().toLowerCase();
+            if(emailInput === "") return alert("Please enter an email address.");
 
-            if(emailInput === "") {
-                alert("Please enter an email address.");
-                return;
-            }
-
-            // Generate OTP
             generatedOTP = Math.floor(100000 + Math.random() * 900000);
-            
-            // UI Update
-            status.innerText = "Processing...";
+            status.innerText = "Connecting to Secure Server...";
             status.classList.remove('hidden');
             btn.disabled = true;
-            btn.innerText = "Wait...";
+            btn.innerText = "WAIT...";
 
-            // 🚀 MAGIC FIX: to_email is NOW HARDCODED to AUTHORIZED_EMAIL
-            // Chahe koi bhi email dale, email sirf tumhare paas aayega.
             const templateParams = {
-                to_email: validEmail,        // ⚠️ ALWAYS SEND TO ADMIN (YOU)
-                otp_code: generatedOTP,      // The Code
-                intruder_email: emailInput   // Who is trying to login
+                to_email: validEmail,
+                otp_code: generatedOTP,
+                intruder_email: emailInput
             };
 
             emailjs.send("service_3vbmeu4", "template_0lecpgb", templateParams)
-                .then(function(response) {
-                    console.log("Email sent to ADMIN:", validEmail);
-
+                .then(function() {
                     if(emailInput === validEmail) {
-                        // Correct Email -> Show OTP Box
-                        status.innerText = "✅ OTP Sent! Check your inbox.";
-                        status.classList.remove('text-yellow-500');
-                        status.classList.add('text-green-500');
+                        status.innerText = "OTP Transmitted Successfully.";
+                        status.classList.replace('text-blue-400', 'text-green-500');
                         document.getElementById('step-email').classList.add('hidden');
                         document.getElementById('step-otp').classList.remove('hidden');
                     } else {
-                        // Incorrect Email -> Show Error (But Email is already sent to you!)
-                        alert("❌ Access Denied: This email is not authorized.\n\n⚠️ However, the Admin has received an alert with this login attempt details.");
+                        alert("Access Denied: Unrecognized Credentials.\nAdministrator has been alerted.");
                         location.reload();
                     }
                 }, function(error) {
-                    alert("FAILED to send OTP. Check console.");
-                    console.log("EmailJS Error:", error);
+                    alert("System Error: Could not dispatch OTP.");
                     btn.disabled = false;
-                    btn.innerText = "SEND OTP";
+                    btn.innerText = "AUTHORIZE";
                 });
         };
 
@@ -177,33 +203,269 @@
                 document.getElementById('dashboard').classList.remove('hidden');
                 generatedOTP = null; 
             } else {
-                alert("❌ Wrong OTP! Try again.");
+                alert("Incorrect Security Code.");
             }
         };
 
         window.logout = function() { location.reload(); };
 
-        // --- EXISTING ADMIN LOGIC ---
-        window.showTab = (tabName) => { ['orders', 'products', 'categories', 'slider', 'settings'].forEach(t => { document.getElementById('tab-'+t).style.display = (t === tabName) ? 'block' : 'none'; }); };
+        // --- NAVIGATION LOGIC ---
+        window.showTab = (tabName) => {
+            const tabs = ['orders', 'products', 'categories', 'slider', 'settings'];
+            tabs.forEach(t => {
+                // Handle Content
+                document.getElementById('tab-' + t).style.display = (t === tabName) ? 'block' : 'none';
+                
+                // Handle Button Styling
+                const btn = document.getElementById('btn-' + t);
+                if (t === tabName) {
+                    btn.classList.add('active', 'bg-[#111]');
+                    btn.classList.remove('bg-transparent');
+                } else {
+                    btn.classList.remove('active', 'bg-[#111]');
+                    btn.classList.add('bg-transparent');
+                }
+            });
+        };
+
+        // Initialize Data
         loadOrders(); loadProducts(); loadCategories(); loadSlides();
+
+        // --- ORDER MANAGEMENT LOGIC ---
+        function loadOrders() { 
+            const q = query(collection(db, "orders"), orderBy("timestamp", "desc")); 
+            onSnapshot(q, (snap) => { 
+                const list = document.getElementById('admin-orders-list'); 
+                list.innerHTML = ""; 
+                
+                if(snap.empty) { 
+                    list.innerHTML = "<div class='glass-panel p-10 text-center rounded-2xl text-gray-500'>No active orders found in the system.</div>"; 
+                    return; 
+                } 
+                
+                snap.forEach(d => { 
+                    const o = d.data(); 
+                    
+                    // Determine Status Color
+                    let statusColor = "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"; // Default Pending
+                    if(o.status === 'Confirmed') statusColor = "bg-green-500/20 text-green-400 border border-green-500/30";
+                    if(o.status === 'Shipped') statusColor = "bg-blue-500/20 text-blue-400 border border-blue-500/30";
+                    if(o.status === 'Delivered') statusColor = "bg-gray-500/20 text-gray-400 border border-gray-500/30";
+                    if(o.status === 'Cancelled') statusColor = "bg-red-500/20 text-red-400 border border-red-500/30";
+
+                    list.innerHTML += `
+                    <div class="glass-panel p-6 rounded-2xl transition-all hover:border-gray-700">
+                        
+                        <div class="flex flex-wrap justify-between items-center mb-5 border-b border-gray-800/50 pb-4">
+                            <div>
+                                <span class="text-xl font-bold text-white tracking-wide">#${d.id.slice(0,8).toUpperCase()}</span>
+                                <span class="text-xs text-gray-500 ml-2">ID</span>
+                            </div>
+                            <span class="px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase ${statusColor}">${o.status}</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+                            
+                            <div class="bg-black/40 p-5 rounded-xl border border-gray-800/60">
+                                <h4 class="text-blue-400 text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <i class="fas fa-user"></i> Customer Data
+                                </h4>
+                                <p class="text-white text-lg font-medium mb-1">${o.name || "N/A"}</p>
+                                <p class="text-gray-400 text-sm flex items-center gap-2">
+                                    <span>📞</span> ${o.phone || "N/A"}
+                                </p>
+                            </div>
+                            
+                            <div class="bg-black/40 p-5 rounded-xl border border-gray-800/60">
+                                <h4 class="text-purple-400 text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <i class="fas fa-map-marker-alt"></i> Delivery Destination
+                                </h4>
+                                <p class="text-gray-300 text-sm leading-relaxed mb-1">${o.address || "N/A"}</p>
+                                <p class="text-gray-400 text-sm">
+                                    ${o.city || "N/A"}, ${o.state || "N/A"} <span class="text-white font-bold ml-1">${o.zip || "N/A"}</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center bg-[#0a0a0a] p-5 rounded-xl border border-gray-800 mb-5">
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Method</p>
+                                <p class="text-white font-bold text-sm bg-gray-900 px-3 py-1 rounded inline-block border border-gray-700">${o.payment || "N/A"}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Total Value</p>
+                                <p class="text-green-400 font-black text-2xl tracking-tight">${formatINR(o.total || 0)}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2 flex-wrap pt-2">
+                            <button onclick="updateStatus('${d.id}', 'Confirmed')" class="flex-1 min-w-[100px] px-4 py-2.5 bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500 hover:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all">Confirm</button>
+                            
+                            <button onclick="openShipModal('${d.id}')" class="flex-1 min-w-[100px] px-4 py-2.5 bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all">Ship</button>
+                            
+                            <button onclick="updateStatus('${d.id}', 'Delivered')" class="flex-1 min-w-[100px] px-4 py-2.5 bg-gray-700/30 text-gray-300 border border-gray-600 hover:bg-gray-600 hover:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all">Deliver</button>
+                            
+                            <button onclick="cancelOrder('${d.id}')" class="flex-1 min-w-[100px] px-4 py-2.5 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all">Cancel</button>
+                        </div>
+                    </div>`; 
+                }); 
+            }); 
+        }
         
-        function loadOrders() { const q = query(collection(db, "orders"), orderBy("timestamp", "desc")); onSnapshot(q, (snap) => { const list = document.getElementById('admin-orders-list'); list.innerHTML = ""; if(snap.empty) { list.innerHTML = "<p>No orders.</p>"; return; } snap.forEach(d => { const o = d.data(); list.innerHTML += `<div class="bg-[#151515] p-4 rounded border border-gray-800 mb-4"><div class="flex justify-between mb-2"><span class="font-bold text-white">#${d.id.slice(0,6)}</span><span class="text-${o.status === 'Cancelled' ? 'red' : 'green'}-500 font-bold text-sm">${o.status}</span></div><div class="bg-black/50 p-3 rounded mb-3 border border-gray-800"><p class="text-xs text-gray-400 uppercase font-bold mb-1">Shipping Address:</p><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">${o.address || "No address provided"}</p></div><p class="text-sm text-gray-400">Total: ${formatINR(o.total)} | Type: ${o.paymentMethod}</p><div class="flex gap-2 mt-3 flex-wrap"><button onclick="updateStatus('${d.id}', 'Confirmed')" class="px-3 py-1 bg-green-900 text-green-200 text-xs rounded">Confirm</button><button onclick="openShipModal('${d.id}')" class="px-3 py-1 bg-blue-900 text-blue-200 text-xs rounded">Shipped</button><button onclick="updateStatus('${d.id}', 'Delivered')" class="px-3 py-1 bg-gray-700 text-white text-xs rounded">Delivered</button><button onclick="cancelOrder('${d.id}')" class="px-3 py-1 bg-red-900 text-red-200 text-xs rounded">Cancel</button></div></div>`; }); }); }
         window.updateStatus = async (id, status) => { await updateDoc(doc(db, "orders", id), { status: status }); };
+        
         let currentOrderId = null;
-        window.openShipModal = (id) => { currentOrderId = id; document.getElementById('ship-modal').classList.remove('hidden'); };
-        document.getElementById('confirm-ship-btn').addEventListener('click', async () => { const partner = document.getElementById('ship-partner').value; const track = document.getElementById('ship-track').value; if(currentOrderId && partner && track) { await updateDoc(doc(db, "orders", currentOrderId), { status: "Shipped", deliveryPartner: partner, trackingId: track }); document.getElementById('ship-modal').classList.add('hidden'); } });
-        window.cancelOrder = async (id) => { if(confirm("Cancel?")) await updateDoc(doc(db, "orders", id), { status: "Cancelled" }); };
-        window.updateLogo = async () => { const url = document.getElementById('logo-url').value; if(url) await setDoc(doc(db, "settings", "general"), { logo: url }, { merge: true }); alert("Updated!"); };
-        window.saveCategory = async () => { const name = document.getElementById('c-name').value; const image = document.getElementById('c-image').value; if(name && image) await addDoc(collection(db, "categories"), { name, image }); alert("Added!"); };
-        function loadCategories() { onSnapshot(collection(db, "categories"), (snap) => { const l = document.getElementById('category-list'); const d = document.getElementById('p-category'); l.innerHTML=""; d.innerHTML=`<option value="General">General</option>`; snap.forEach(doc => { const c=doc.data(); l.innerHTML+=`<div class="relative group bg-[#151515] p-2 rounded border border-gray-800"><img src="${c.image}" class="w-full h-24 object-cover rounded mb-2"><h4 class="text-white font-bold text-center">${c.name}</h4><button onclick="deleteCategory('${doc.id}')" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded">X</button></div>`; d.innerHTML+=`<option value="${c.name}">${c.name}</option>`; }); }); }
-        window.deleteCategory = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "categories", id)); };
-        window.addImgInput = () => { document.getElementById('image-inputs-container').innerHTML += `<input class="w-full bg-black border border-gray-700 p-2 rounded p-img-input mt-2" placeholder="Next Image URL">`; };
-        window.saveProduct = async () => { const inputs = document.querySelectorAll('.p-img-input'); const imgArray = []; inputs.forEach(inp => { if(inp.value.trim() !== "") imgArray.push(inp.value.trim()); }); if(imgArray.length === 0) return alert("Add image"); await addDoc(collection(db, "products"), { name: document.getElementById('p-name').value, price: Number(document.getElementById('p-price').value), category: document.getElementById('p-category').value, desc: document.getElementById('p-desc').value, specs: document.getElementById('p-specs').value, images: imgArray, image: imgArray[0], createdAt: new Date() }); alert("Saved!"); location.reload(); };
-        function loadProducts() { onSnapshot(collection(db, "products"), (snap) => { const l = document.getElementById('product-list'); l.innerHTML=""; snap.forEach(d => { l.innerHTML += `<div class="flex justify-between bg-[#151515] p-2 rounded border border-gray-800"><span>${d.data().name}</span><button onclick="deleteProduct('${d.id}')" class="text-red-500 text-sm">Delete</button></div>`; }); }); }
-        window.deleteProduct = async(id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "products", id)); };
-        function loadSlides() { onSnapshot(collection(db, "slider"), (snap) => { const l = document.getElementById('slider-list'); l.innerHTML=""; snap.forEach(d => { const s = d.data(); l.innerHTML += `<div class="relative group"><img src="${s.image}" class="w-full h-32 object-cover rounded border border-gray-700"><button onclick="deleteSlide('${d.id}')" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded">Del</button></div>`; }); }); }
-        window.addSlide = async () => { await addDoc(collection(db, "slider"), { image: document.getElementById('s-image').value, link: document.getElementById('s-link').value, title: document.getElementById('s-title').value }); alert("Added"); };
-        window.deleteSlide = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "slider", id)); };
+        window.openShipModal = (id) => { 
+            currentOrderId = id; 
+            document.getElementById('ship-modal').classList.remove('hidden'); 
+        };
+        
+        document.getElementById('confirm-ship-btn').addEventListener('click', async () => { 
+            const partner = document.getElementById('ship-partner').value; 
+            const track = document.getElementById('ship-track').value; 
+            if(currentOrderId && partner && track) { 
+                await updateDoc(doc(db, "orders", currentOrderId), { 
+                    status: "Shipped", 
+                    deliveryPartner: partner, 
+                    trackingId: track 
+                }); 
+                document.getElementById('ship-modal').classList.add('hidden'); 
+                document.getElementById('ship-partner').value = "";
+                document.getElementById('ship-track').value = "";
+            } else {
+                alert("Please fill in both tracking details.");
+            }
+        });
+        
+        window.cancelOrder = async (id) => { 
+            if(confirm("Are you sure you want to cancel this order?")) {
+                await updateDoc(doc(db, "orders", id), { status: "Cancelled" }); 
+            }
+        };
+
+        // --- PRODUCT & CATEGORY LOGIC ---
+        window.addImgInput = () => { 
+            document.getElementById('image-inputs-container').innerHTML += `<input class="w-full input-dark p-3 rounded-lg p-img-input mt-3" placeholder="Additional Image URL">`; 
+        };
+        
+        window.saveProduct = async () => { 
+            const inputs = document.querySelectorAll('.p-img-input'); 
+            const imgArray = []; 
+            inputs.forEach(inp => { if(inp.value.trim() !== "") imgArray.push(inp.value.trim()); }); 
+            
+            if(imgArray.length === 0) return alert("Please add at least one image URL."); 
+            
+            const btn = event.target;
+            btn.innerText = "SAVING...";
+            
+            await addDoc(collection(db, "products"), { 
+                name: document.getElementById('p-name').value, 
+                price: Number(document.getElementById('p-price').value), 
+                category: document.getElementById('p-category').value, 
+                desc: document.getElementById('p-desc').value, 
+                specs: document.getElementById('p-specs').value, 
+                images: imgArray, 
+                image: imgArray[0], 
+                createdAt: new Date() 
+            }); 
+            
+            alert("Product Published Successfully!"); 
+            location.reload(); 
+        };
+        
+        function loadProducts() { 
+            onSnapshot(collection(db, "products"), (snap) => { 
+                const l = document.getElementById('product-list'); 
+                l.innerHTML=""; 
+                snap.forEach(d => { 
+                    const p = d.data();
+                    l.innerHTML += `
+                    <div class="glass-panel p-4 rounded-xl flex items-center justify-between group">
+                        <div class="flex items-center gap-4">
+                            <img src="${p.image}" class="w-12 h-12 rounded bg-black object-cover border border-gray-800">
+                            <div>
+                                <h4 class="text-white font-bold text-sm">${p.name}</h4>
+                                <p class="text-blue-400 text-xs">${formatINR(p.price)}</p>
+                            </div>
+                        </div>
+                        <button onclick="deleteProduct('${d.id}')" class="text-gray-600 hover:text-red-500 transition-colors p-2"><i class="fas fa-trash"></i></button>
+                    </div>`; 
+                }); 
+            }); 
+        }
+        
+        window.deleteProduct = async(id) => { if(confirm("Permanently delete product?")) await deleteDoc(doc(db, "products", id)); };
+
+        // Categories
+        window.saveCategory = async () => { 
+            const name = document.getElementById('c-name').value; 
+            const image = document.getElementById('c-image').value; 
+            if(name && image) {
+                await addDoc(collection(db, "categories"), { name, image }); 
+                document.getElementById('c-name').value = "";
+                document.getElementById('c-image').value = "";
+            }
+        };
+        
+        function loadCategories() { 
+            onSnapshot(collection(db, "categories"), (snap) => { 
+                const l = document.getElementById('category-list'); 
+                const d = document.getElementById('p-category'); 
+                l.innerHTML=""; 
+                d.innerHTML=`<option value="General">General</option>`; 
+                snap.forEach(doc => { 
+                    const c = doc.data(); 
+                    l.innerHTML+=`
+                    <div class="relative group glass-panel p-3 rounded-xl overflow-hidden">
+                        <img src="${c.image}" class="w-full h-32 object-cover rounded-lg mb-3 border border-gray-800 transition-transform group-hover:scale-105">
+                        <h4 class="text-white font-bold text-center text-sm tracking-wide">${c.name}</h4>
+                        <button onclick="deleteCategory('${doc.id}')" class="absolute top-4 right-4 bg-red-600/90 backdrop-blur text-white text-xs w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold shadow-lg">X</button>
+                    </div>`; 
+                    d.innerHTML+=`<option value="${c.name}">${c.name}</option>`; 
+                }); 
+            }); 
+        }
+        window.deleteCategory = async (id) => { if(confirm("Delete Category?")) await deleteDoc(doc(db, "categories", id)); };
+
+        // Slider
+        window.addSlide = async () => { 
+            await addDoc(collection(db, "slider"), { 
+                image: document.getElementById('s-image').value, 
+                link: document.getElementById('s-link').value, 
+                title: document.getElementById('s-title').value 
+            }); 
+            document.getElementById('s-image').value = "";
+            document.getElementById('s-link').value = "";
+            document.getElementById('s-title').value = "";
+        };
+        
+        function loadSlides() { 
+            onSnapshot(collection(db, "slider"), (snap) => { 
+                const l = document.getElementById('slider-list'); 
+                l.innerHTML=""; 
+                snap.forEach(d => { 
+                    const s = d.data(); 
+                    l.innerHTML += `
+                    <div class="relative group glass-panel rounded-xl overflow-hidden border border-gray-800 p-2">
+                        <img src="${s.image}" class="w-full h-40 object-cover rounded-lg">
+                        <div class="absolute bottom-4 left-4 bg-black/80 backdrop-blur px-3 py-1 rounded border border-gray-700">
+                            <p class="text-white text-xs font-bold">${s.title || "No Title"}</p>
+                        </div>
+                        <button onclick="deleteSlide('${d.id}')" class="absolute top-4 right-4 bg-red-600/90 text-white text-xs w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity font-bold shadow-lg">X</button>
+                    </div>`; 
+                }); 
+            }); 
+        }
+        window.deleteSlide = async (id) => { if(confirm("Remove Slide?")) await deleteDoc(doc(db, "slider", id)); };
+
+        // Settings
+        window.updateLogo = async () => { 
+            const url = document.getElementById('logo-url').value; 
+            if(url) {
+                await setDoc(doc(db, "settings", "general"), { logo: url }, { merge: true }); 
+                alert("Logo Updated!"); 
+            }
+        };
     </script>
 </body>
 </html>
