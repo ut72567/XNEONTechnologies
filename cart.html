@@ -24,7 +24,7 @@
     <main class="max-w-4xl mx-auto p-6 pt-12">
         <h1 class="text-3xl font-bold mb-8 tracking-tight">Shopping Cart</h1>
 
-        <div id="cart-items" class="space-y-4">
+        <div id="cart-items" class="space-y-4 w-full">
             <div class="animate-pulse bg-gray-900 h-24 rounded-2xl"></div>
         </div>
 
@@ -39,6 +39,7 @@
         </div>
     </main>
 
+    <!-- Checkout Modal -->
     <div id="checkout-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="glass-panel p-8 rounded-3xl w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
             <button onclick="document.getElementById('checkout-modal').classList.add('hidden')" class="absolute top-4 right-6 text-gray-400 hover:text-white text-3xl">&times;</button>
@@ -54,7 +55,8 @@
                 </div>
                 <input type="text" id="ship-zip" placeholder="PIN Code" class="w-full p-4 rounded-xl">
                 
-                <select id="payment-method" class="w-full p-4 rounded-xl">
+                <!-- Added onchange event here to block Online Payment -->
+                <select id="payment-method" class="w-full p-4 rounded-xl" onchange="checkPaymentMethod()">
                     <option value="COD">Cash on Delivery (COD)</option>
                     <option value="UPI">Online Payment (UPI/Card)</option>
                 </select>
@@ -64,19 +66,20 @@
         </div>
     </div>
 
+    <!-- Success Animation Modal -->
     <div id="success-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] hidden flex items-center justify-center">
         <div class="text-center">
             <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
                 <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
                 <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
             </svg>
-            <h2 class="text-3xl font-bold text-green-500 mt-6 mb-2">Order Completed!</h2>
-            <p class="text-gray-400">Payment successful. Redirecting...</p>
+            <h2 class="text-3xl font-bold text-green-500 mt-6 mb-2">Order Confirmed!</h2>
+            <!-- Removed the payment confirmed text here -->
+            <p class="text-gray-400">Redirecting...</p>
         </div>
     </div>
 
     <script type="module">
-        // Added doc and updateDoc to the import list
         import { db, auth, loadNavbar, collection, onSnapshot, deleteDoc, addDoc, formatINR, serverTimestamp, doc, updateDoc } from './firebase-config.js';
         loadNavbar();
 
@@ -98,23 +101,28 @@
                     }
                     snap.forEach(d => {
                         const item = d.data();
-                        cartData.push({ id: d.id, ...item }); // Now saving the document ID
+                        cartData.push({ id: d.id, ...item }); 
                         cartTotal += (item.price * item.qty);
+                        
+                        // Added 'min-w-0' to text container, 'truncate' to title, and 'flex-shrink-0' to fixed elements to fix layout
                         cartDiv.innerHTML += `
-                        <div class="glass-panel flex items-center gap-4 p-4 rounded-2xl">
-                            <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
-                            <div class="flex-1">
-                                <h3 class="font-bold">${item.name}</h3>
+                        <div class="glass-panel flex items-center gap-3 p-4 rounded-2xl w-full">
+                            <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg flex-shrink-0">
+                            
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-base truncate">${item.name}</h3>
                                 <p class="text-sm text-gray-400">${formatINR(item.price)}</p>
                             </div>
                             
-                            <div class="flex items-center gap-3 bg-[#050505] border border-[#222] rounded-xl px-3 py-1">
-                                <button onclick="updateQty('${d.id}', ${item.qty}, -1)" class="text-gray-400 hover:text-white font-bold text-lg">-</button>
-                                <span class="w-6 text-center font-bold">${item.qty}</span>
-                                <button onclick="updateQty('${d.id}', ${item.qty}, 1)" class="text-gray-400 hover:text-white font-bold text-lg">+</button>
+                            <!-- Plus/Minus Quantity Controls -->
+                            <div class="flex items-center gap-2 bg-[#050505] border border-[#222] rounded-xl px-2 py-1 flex-shrink-0">
+                                <button onclick="updateQty('${d.id}', ${item.qty}, -1)" class="text-gray-400 hover:text-white font-bold text-lg px-1">-</button>
+                                <span class="w-5 text-center font-bold text-sm">${item.qty}</span>
+                                <button onclick="updateQty('${d.id}', ${item.qty}, 1)" class="text-gray-400 hover:text-white font-bold text-lg px-1">+</button>
                             </div>
 
-                            <button onclick="removeItem('${d.id}')" class="text-gray-500 hover:text-red-500 text-3xl pl-3 pr-1 pb-1">&times;</button>
+                            <!-- Cross Button for Removal -->
+                            <button onclick="removeItem('${d.id}')" class="text-gray-500 hover:text-red-500 text-2xl flex-shrink-0 ml-1 pl-1 pr-1 pb-1">&times;</button>
                         </div>`;
                     });
                     totalSpan.innerText = formatINR(cartTotal);
@@ -122,7 +130,15 @@
             }
         });
 
-        // Update Quantity Function
+        // Function to check and block online payment
+        window.checkPaymentMethod = () => {
+            const select = document.getElementById('payment-method');
+            if (select.value === 'UPI') {
+                alert("The online payment option is currently unavailable. Please select Cash on Delivery (COD).");
+                select.value = 'COD'; // Reverts the dropdown back to COD automatically
+            }
+        };
+
         window.updateQty = async (id, currentQty, change) => {
             if(!auth.currentUser) return;
             const newQty = currentQty + change;
@@ -166,13 +182,13 @@
                 btn.innerText = "Processing...";
                 btn.disabled = true;
 
-                // 1. Create the Order
+                // 1. Create the Order (Status set to Pending since it's COD)
                 await addDoc(collection(db, "orders"), {
                     userId: user.uid, 
                     items: cartData, 
                     total: cartTotal,
                     ...data, 
-                    status: "Paid", // Set to paid per your requirement
+                    status: "Pending", 
                     timestamp: serverTimestamp()
                 });
 
