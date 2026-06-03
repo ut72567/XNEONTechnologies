@@ -334,16 +334,18 @@ async function sendEmailViaGoogle(to, subject, html) {
 
 // 2. Update your existing confirm-ship-btn listener
 document.getElementById('confirm-ship-btn').addEventListener('click', async () => { 
-    const partner = document.getElementById('ship-partner').value; 
-    const track = document.getElementById('ship-track').value; 
-    
-    // We fetch the current order data using 'currentOrderId'
-    // Ensure your order document has an 'email' field!
-    const orderRef = doc(db, "orders", currentOrderId);
-    const orderSnapshot = await getDoc(orderRef); // Make sure 'getDoc' is imported from firebase/firestore
-    const orderData = orderSnapshot.data();
+    const partner = document.getElementById('confirm-ship-btn').addEventListener('click', async () => { 
+    try {
+        const partner = document.getElementById('ship-partner').value; 
+        const track = document.getElementById('ship-track').value; 
+        
+        if(!currentOrderId) throw new Error("Order ID is missing! Try reopening the modal.");
+        if(!partner || !track) throw new Error("Please enter both Partner and Tracking ID.");
 
-    if(currentOrderId && partner && track) { 
+        const orderRef = doc(db, "orders", currentOrderId);
+        const orderSnapshot = await getDoc(orderRef);
+        const orderData = orderSnapshot.data();
+
         // Update Order
         await updateDoc(orderRef, { 
             status: "Shipped", 
@@ -351,23 +353,22 @@ document.getElementById('confirm-ship-btn').addEventListener('click', async () =
             trackingId: track 
         }); 
 
-        // Trigger Email if customer email exists
+        // Trigger Email
         if(orderData.email) {
             await sendEmailViaGoogle(
                 orderData.email, 
-                "Your XNEON Order has Shipped! 🚀",
-                `<h1>Order Shipped</h1>
-                 <p>Great news! Your order is on its way.</p>
-                 <p>Partner: <b>${partner}</b></p>
-                 <p>Tracking ID: <b>${track}</b></p>
-                 <p>Thank you for shopping with XNEON Technologies!</p>`
+                "Your Order has Shipped!",
+                `<h1>Order Shipped</h1><p>Tracking: ${track}</p>`
             );
         }
 
         document.getElementById('ship-modal').classList.add('hidden'); 
-        alert("Shipment Confirmed & Email Sent!");
-    } else {
-        alert("Please fill in tracking details.");
+        alert("Success!");
+        location.reload();
+
+    } catch (error) {
+        // THIS WILL POP UP ON YOUR PHONE SCREEN
+        alert("ERROR: " + error.message);
     }
 });
 
