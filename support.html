@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Center | XNEON Technologies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #050505; color: #ffffff; }
+        .card { background-color: #111111; border: 1px solid #222222; backdrop-filter: blur(10px); }
+        .glass { background: rgba(17, 17, 17, 0.7); border: 1px solid #222222; }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+
+    <main class="container mx-auto px-6 py-16">
+        <!-- Hero -->
+        <section class="text-center mb-20">
+            <h1 class="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-cyan-400">XNEON Support Center</h1>
+            <p class="text-gray-400 text-lg max-w-2xl mx-auto">We are committed to providing world-class assistance for all your technology and hardware inquiries.</p>
+        </section>
+
+        <!-- Quick Contacts -->
+        <div class="grid md:grid-cols-2 gap-8 mb-20">
+            <div class="card p-8 rounded-2xl hover:border-blue-500 transition-all">
+                <i class="fab fa-whatsapp text-4xl text-green-500 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">WhatsApp Support</h3>
+                <p class="text-gray-400 mb-4">+91 7068198329</p>
+                <a href="https://wa.me/917068198329" class="text-blue-400 hover:underline">Message us directly</a>
+            </div>
+            <div class="card p-8 rounded-2xl hover:border-blue-500 transition-all">
+                <i class="fas fa-envelope text-4xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Support Email</h3>
+                <p class="text-gray-400 mb-4">support@xneon.store</p>
+                <a href="mailto:support@xneon.store" class="text-blue-400 hover:underline">Send an email</a>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <section class="card p-10 rounded-2xl mb-20">
+            <h2 class="text-3xl font-bold mb-8">Send us a Message</h2>
+            <form action="https://formsubmit.co/support@xneon.store" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input type="text" name="name" placeholder="Name" required class="bg-[#050505] p-4 rounded-lg border border-[#222222] focus:border-blue-500 outline-none">
+                <input type="email" name="email" placeholder="Email" required class="bg-[#050505] p-4 rounded-lg border border-[#222222] focus:border-blue-500 outline-none">
+                <input type="text" name="subject" placeholder="Subject" required class="md:col-span-2 bg-[#050505] p-4 rounded-lg border border-[#222222] focus:border-blue-500 outline-none">
+                <textarea name="message" placeholder="Message" rows="5" required class="md:col-span-2 bg-[#050505] p-4 rounded-lg border border-[#222222] focus:border-blue-500 outline-none"></textarea>
+                <button type="submit" class="md:col-span-2 bg-blue-600 hover:bg-blue-700 py-4 rounded-lg font-bold transition-all">Submit Request</button>
+            </form>
+        </section>
+
+        <!-- Socials -->
+        <div class="grid md:grid-cols-3 gap-8 mb-20">
+            <a href="https://www.instagram.com/xneontechnologies" class="card p-6 rounded-2xl hover:bg-[#1a1a1a] transition-all">Instagram</a>
+            <a href="https://youtube.com/@XNEON_India" class="card p-6 rounded-2xl hover:bg-[#1a1a1a] transition-all">YouTube: XNEON India</a>
+            <a href="https://youtube.com/@XNEONTechnologies" class="card p-6 rounded-2xl hover:bg-[#1a1a1a] transition-all">YouTube: XNEON Tech</a>
+        </div>
+
+        <!-- FAQ -->
+        <section class="mb-20">
+            <h2 class="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                <details class="card p-6 rounded-xl">
+                    <summary class="font-bold cursor-pointer">How do I track my order?</summary>
+                    <p class="mt-4 text-gray-400">You will receive an email with tracking details once your order has been dispatched from our warehouse.</p>
+                </details>
+                <details class="card p-6 rounded-xl">
+                    <summary class="font-bold cursor-pointer">How can I contact support?</summary>
+                    <p class="mt-4 text-gray-400">You can reach us via the WhatsApp number or email address provided on this page.</p>
+                </details>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center py-10 border-t border-[#222222]">
+            <p class="text-gray-500">© 2026 XNEON Technologies. Jivanpur, Chandauli, UP, India.</p>
+        </footer>
+    </main>
+
+    <script type="module">
+        import { loadNavbar } from './firebase-config.js';
+        loadNavbar();
+    </script>
+</body>
+</html>

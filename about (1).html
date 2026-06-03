@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | XNEON Technologies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #050505; color: #ffffff; }
+        .card { background-color: #111111; border: 1px solid #222222; }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+
+    <main class="container mx-auto px-6 py-16">
+        <section class="mb-20 text-center">
+            <h1 class="text-5xl font-bold mb-6">About XNEON Technologies</h1>
+            <p class="text-gray-400 text-xl max-w-3xl mx-auto">Focused on technology, innovation, robotics, e-commerce, and future-ready electronics solutions.</p>
+        </section>
+
+        <section class="card p-10 rounded-2xl mb-20">
+            <h2 class="text-3xl font-bold mb-6">Founder & CEO</h2>
+            <div class="flex items-center gap-6">
+                <div class="bg-blue-900 w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold">SR</div>
+                <div>
+                    <h3 class="text-2xl font-bold">Shivansh Ranjan Tripathi</h3>
+                    <p class="text-blue-400">Founder & CEO</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid md:grid-cols-3 gap-8 mb-20">
+            <div class="card p-8 rounded-2xl"><i class="fas fa-microchip text-blue-500 mb-4 text-3xl"></i><h3 class="text-xl font-bold mb-2">Technology Products</h3></div>
+            <div class="card p-8 rounded-2xl"><i class="fas fa-robot text-blue-500 mb-4 text-3xl"></i><h3 class="text-xl font-bold mb-2">Robotics & Innovation</h3></div>
+            <div class="card p-8 rounded-2xl"><i class="fas fa-shopping-cart text-blue-500 mb-4 text-3xl"></i><h3 class="text-xl font-bold mb-2">E-Commerce Services</h3></div>
+        </section>
+
+        <footer class="text-center py-10 border-t border-[#222222]">
+            <p class="text-gray-500">© 2026 XNEON Technologies. Jivanpur, Chandauli, UP, India.</p>
+        </footer>
+    </main>
+
+    <script type="module">
+        import { loadNavbar } from './firebase-config.js';
+        loadNavbar();
+    </script>
+</body>
+</html>
