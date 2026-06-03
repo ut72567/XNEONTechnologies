@@ -139,7 +139,7 @@ export function loadNavbar() {
     // --- LOGIC START ---
     window.recaptchaVerifier = null;
     window.confirmationResult = null;
-    
+
     // Variables for Email OTP
     let generatedEmailOTP = null;
     let tempEmail = "", tempPass = "";
@@ -149,12 +149,12 @@ export function loadNavbar() {
         document.getElementById('auth-phone-section').classList.add('hidden');
         document.getElementById('auth-email-section').classList.add('hidden');
         document.getElementById('auth-msg').classList.add('hidden');
-        
+
         // Reset Phone forms
         document.getElementById('auth-phone-step-1').classList.remove('hidden');
         document.getElementById('auth-phone-step-2').classList.add('hidden');
         document.getElementById('otp-input').value = "";
-        
+
         // Reset Email forms
         document.getElementById('email-login-form').classList.remove('hidden');
         document.getElementById('email-signup-step-1').classList.add('hidden');
@@ -229,13 +229,13 @@ export function loadNavbar() {
             tempEmail = document.getElementById('signup-email').value;
             tempPass = document.getElementById('signup-pass').value;
             if(tempPass.length < 6) return alert("Password too short (min 6 chars)");
-            
+
             // Generate OTP
             generatedEmailOTP = Math.floor(100000 + Math.random() * 900000);
             authMsg.innerText = "Sending OTP to Email..."; authMsg.classList.remove('hidden');
 
             const templateParams = { user_email: tempEmail, otp_code: generatedEmailOTP };
-            
+
             emailjs.send("service_3vbmeu4", "template_i1g09mi", templateParams)
                 .then(() => {
                     authMsg.classList.add('hidden');
@@ -267,9 +267,14 @@ export function loadNavbar() {
 
     const menuList = document.getElementById('menu-list');
     const commonLinks = `
-        <li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Home</span></a></li>
-        <li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Categories</span></a></li>
-    `;
+    <li><a href="index.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Home</span></a></li>
+
+    <li><a href="categories.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Categories</span></a></li>
+
+    <li><a href="about.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>About</span></a></li>
+
+    <li><a href="support.html" class="block py-4 px-6 text-white hover:bg-gray-800 border-b border-gray-800 flex items-center gap-4"><span>Support</span></a></li>
+`;
 
     onAuthStateChanged(auth, (user) => {
         let identifier = user?.phoneNumber || user?.email || "User";
@@ -282,7 +287,7 @@ export function loadNavbar() {
     });
 
     document.getElementById('menu-toggle')?.addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
-    
+
     onAuthStateChanged(auth, (user) => {
         if (user) onSnapshot(collection(db, "carts", user.uid, "items"), (snap) => {
             const count = document.getElementById('cart-count');
