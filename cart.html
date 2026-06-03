@@ -10,6 +10,12 @@
         .glass-panel { background: #111111; border: 1px solid #222222; }
         input, select { background: #050505 !important; border: 1px solid #222222 !important; transition: 0.3s; }
         input:focus { border-color: #3b82f6 !important; outline: none; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+        
+        /* Green Tick Animation */
+        .checkmark { width: 80px; height: 80px; border-radius: 50%; display: block; stroke-width: 4; stroke: #22c55e; stroke-miterlimit: 10; margin: 0 auto; }
+        .checkmark__circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 4; stroke-miterlimit: 10; stroke: #22c55e; fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .checkmark__check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
     </style>
 </head>
 <body class="pb-20">
@@ -54,12 +60,24 @@
                 </select>
             </div>
 
-            <button onclick="placeOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl mt-6 transition-all">CONFIRM ORDER</button>
+            <button id="confirm-btn" onclick="placeOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl mt-6 transition-all">CONFIRM ORDER</button>
+        </div>
+    </div>
+
+    <div id="success-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] hidden flex items-center justify-center">
+        <div class="text-center">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <h2 class="text-3xl font-bold text-green-500 mt-6 mb-2">Order Completed!</h2>
+            <p class="text-gray-400">Payment successful. Redirecting...</p>
         </div>
     </div>
 
     <script type="module">
-        import { db, auth, loadNavbar, collection, onSnapshot, deleteDoc, addDoc, formatINR, serverTimestamp } from './firebase-config.js';
+        // Added doc and updateDoc to the import list
+        import { db, auth, loadNavbar, collection, onSnapshot, deleteDoc, addDoc, formatINR, serverTimestamp, doc, updateDoc } from './firebase-config.js';
         loadNavbar();
 
         const cartDiv = document.getElementById('cart-items');
@@ -80,16 +98,23 @@
                     }
                     snap.forEach(d => {
                         const item = d.data();
-                        cartData.push(item);
+                        cartData.push({ id: d.id, ...item }); // Now saving the document ID
                         cartTotal += (item.price * item.qty);
                         cartDiv.innerHTML += `
                         <div class="glass-panel flex items-center gap-4 p-4 rounded-2xl">
                             <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
                             <div class="flex-1">
                                 <h3 class="font-bold">${item.name}</h3>
-                                <p class="text-sm text-gray-400">${formatINR(item.price)} x ${item.qty}</p>
+                                <p class="text-sm text-gray-400">${formatINR(item.price)}</p>
                             </div>
-                            <button onclick="removeItem('${d.id}')" class="text-gray-500 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button>
+                            
+                            <div class="flex items-center gap-3 bg-[#050505] border border-[#222] rounded-xl px-3 py-1">
+                                <button onclick="updateQty('${d.id}', ${item.qty}, -1)" class="text-gray-400 hover:text-white font-bold text-lg">-</button>
+                                <span class="w-6 text-center font-bold">${item.qty}</span>
+                                <button onclick="updateQty('${d.id}', ${item.qty}, 1)" class="text-gray-400 hover:text-white font-bold text-lg">+</button>
+                            </div>
+
+                            <button onclick="removeItem('${d.id}')" class="text-gray-500 hover:text-red-500 text-3xl pl-3 pr-1 pb-1">&times;</button>
                         </div>`;
                     });
                     totalSpan.innerText = formatINR(cartTotal);
@@ -97,8 +122,28 @@
             }
         });
 
-        window.removeItem = async (id) => { if(auth.currentUser) await deleteDoc(doc(db, "carts", auth.currentUser.uid, "items", id)); };
-        window.openCheckout = () => { if(cartTotal > 0) document.getElementById('checkout-modal').classList.remove('hidden'); else alert("Cart is empty"); };
+        // Update Quantity Function
+        window.updateQty = async (id, currentQty, change) => {
+            if(!auth.currentUser) return;
+            const newQty = currentQty + change;
+            
+            if (newQty <= 0) {
+                await removeItem(id);
+            } else {
+                await updateDoc(doc(db, "carts", auth.currentUser.uid, "items", id), { qty: newQty });
+            }
+        };
+
+        window.removeItem = async (id) => { 
+            if(auth.currentUser) {
+                await deleteDoc(doc(db, "carts", auth.currentUser.uid, "items", id)); 
+            }
+        };
+
+        window.openCheckout = () => { 
+            if(cartTotal > 0) document.getElementById('checkout-modal').classList.remove('hidden'); 
+            else alert("Cart is empty"); 
+        };
 
         window.placeOrder = async () => {
             const data = {
@@ -111,16 +156,39 @@
                 payment: document.getElementById('payment-method').value
             };
 
-            if(!data.name || !data.address || !data.zip) return alert("Please fill in all shipping details.");
+            if(!data.name || !data.address || !data.zip || !data.phone) {
+                return alert("Please fill in all shipping details.");
+            }
 
             const user = auth.currentUser;
             if(user) {
+                const btn = document.getElementById('confirm-btn');
+                btn.innerText = "Processing...";
+                btn.disabled = true;
+
+                // 1. Create the Order
                 await addDoc(collection(db, "orders"), {
-                    userId: user.uid, items: cartData, total: cartTotal,
-                    ...data, status: "Pending", timestamp: serverTimestamp()
+                    userId: user.uid, 
+                    items: cartData, 
+                    total: cartTotal,
+                    ...data, 
+                    status: "Paid", // Set to paid per your requirement
+                    timestamp: serverTimestamp()
                 });
-                alert("Order Placed Successfully!");
-                window.location.href = "orders"; // Assuming you use clean URLs
+
+                // 2. Auto-remove items from the user's cart
+                for (let i = 0; i < cartData.length; i++) {
+                    await deleteDoc(doc(db, "carts", user.uid, "items", cartData[i].id));
+                }
+
+                // 3. Show Green Tick Animation
+                document.getElementById('checkout-modal').classList.add('hidden');
+                document.getElementById('success-modal').classList.remove('hidden');
+
+                // 4. Redirect after animation plays (2.5 seconds)
+                setTimeout(() => {
+                    window.location.href = "orders";
+                }, 2500);
             }
         };
     </script>
